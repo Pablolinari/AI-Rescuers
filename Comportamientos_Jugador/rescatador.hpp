@@ -1,47 +1,108 @@
 #ifndef COMPORTAMIENTORESCATADOR_H
 #define COMPORTAMIENTORESCATADOR_H
 
-#include <chrono>
-#include <time.h>
-#include <thread>
-
 #include "comportamientos/comportamiento.hpp"
-
-class ComportamientoRescatador : public Comportamiento
-{
+#include <chrono>
+#include <cstddef>
+#include <list>
+#include <regex>
+#include <thread>
+#include <time.h>
+#include <utility>
+#include <vector>
+struct EstadoR {
+  int f;
+  int c;
+  int brujula;
+  bool zapatillas;
+  bool operator==(const EstadoR &st) const {
+    return f == st.f && c == st.c && brujula == st.brujula &&
+           zapatillas == st.zapatillas;
+  }
+  bool operator<(const EstadoR &st) const {
+    if (f < st.f)
+      return true;
+    else if (f == st.f && c < st.c)
+      return true;
+    else if (f == st.f && c == st.c && brujula < st.brujula)
+      return true;
+    else if (f == st.f && c == st.c && brujula == st.brujula &&
+             zapatillas < st.zapatillas)
+      return true;
+    else
+      return false;
+  }
+};
+struct NodoR {
+  EstadoR estado;
+  list<Action> secuencia;
+  int coste;
+  bool operator==(const NodoR &nodo) const { return estado == nodo.estado; }
+  bool operator<(const NodoR &node) const {
+    if (coste != node.coste) {
+      return coste < node.coste;
+    } else {
+      return estado < node.estado;
+    }
+  }
+};
+class ComportamientoRescatador : public Comportamiento {
 
 public:
-  ComportamientoRescatador(unsigned int size = 0) : Comportamiento(size)
-  {
+  ComportamientoRescatador(unsigned int size = 0) : Comportamiento(size) {
     // Inicializar Variables de Estado Niveles 0,1,4
-		this->giroizq = 0;
-		this->zapatillas=false;
-		this->last_action=IDLE;
-	}
-  ComportamientoRescatador(std::vector<std::vector<unsigned char>> mapaR, std::vector<std::vector<unsigned char>> mapaC) : Comportamiento(mapaR,mapaC)
-  {
-    // Inicializar Variables de Estado Niveles 2,3
+    this->giro180 = 0;
+    this->orientar = 0;
+    this->giroizq = 0;
+    this->zapatillas = false;
+    this->next_action = IDLE;
+    this->camino_opcional = false;
+    this->memoria = vector<vector<int>>(128, vector<int>(128, 0));
   }
-  ComportamientoRescatador(const ComportamientoRescatador &comport) : Comportamiento(comport) {}
+  ComportamientoRescatador(std::vector<std::vector<unsigned char>> mapaR,
+                           std::vector<std::vector<unsigned char>> mapaC)
+      : Comportamiento(mapaR, mapaC) {
+    // Inicializar Variables de Estado Niveles 2,3
+		this->hayPlan=false;
+		this->zapatillas=false;
+		this->plan={};
+  }
+  ComportamientoRescatador(const ComportamientoRescatador &comport)
+      : Comportamiento(comport) {}
   ~ComportamientoRescatador() {}
 
   Action think(Sensores sensores);
-
   int interact(Action accion, int valor);
-
   Action ComportamientoRescatadorNivel_0(Sensores sensores);
   Action ComportamientoRescatadorNivel_1(Sensores sensores);
   Action ComportamientoRescatadorNivel_2(Sensores sensores);
   Action ComportamientoRescatadorNivel_3(Sensores sensores);
   Action ComportamientoRescatadorNivel_4(Sensores sensores);
-
+  int MenosPisadaR(Sensores sensores);
+  int MenosPisadaR1(Sensores sensores);
+  int SectorInteresanteR(int posf, int posc);
+  int CasillainteresanteR(Sensores sensores);
+  int CasillainteresanteR1(Sensores sensores);
+  void VisualizaPlan(const EstadoR &st, const list<Action> &plan);
+  void PintaPlan(const list<Action> &plan, bool zap);
+  list<Action> DijkstraRescatador(const EstadoR &inicio, const EstadoR &final,
+                                  const vector<vector<unsigned char>> &terreno,
+                                  const vector<vector<unsigned char>> &altura);
+list<Action>DijkstraRescatadornew(
+    const EstadoR &inicio, const EstadoR &final,
+    const vector<vector<unsigned char>> &terreno,
+    const vector<vector<unsigned char>> &altura) ;
 private:
   // Variables de Estado
-	Action last_action ; 
-	int giroizq ;
-	bool zapatillas ;
-
-	
+  Action next_action;
+  int giroizq;
+  int giro180;
+  bool zapatillas;
+  int orientar;
+  bool hayPlan;
+	bool camino_opcional;
+  list<Action> plan;
+  std::vector<std::vector<int>> memoria;
 };
 
 #endif
