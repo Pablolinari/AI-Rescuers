@@ -14,7 +14,10 @@ public:
   ComportamientoRescatador(unsigned int size = 0) : Comportamiento(size)
   {
     // Inicializar Variables de Estado Niveles 0,1,4
-  }
+		this->giroizq = 0;
+		this->zapatillas=false;
+		this->last_action=IDLE;
+	}
   ComportamientoRescatador(std::vector<std::vector<unsigned char>> mapaR, std::vector<std::vector<unsigned char>> mapaC) : Comportamiento(mapaR,mapaC)
   {
     // Inicializar Variables de Estado Niveles 2,3
@@ -34,6 +37,11 @@ public:
 
 private:
   // Variables de Estado
+	Action last_action ; 
+	int giroizq ;
+	bool zapatillas ;
+
+	
 };
 
 #endif
