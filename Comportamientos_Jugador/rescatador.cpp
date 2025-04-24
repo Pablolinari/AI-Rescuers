@@ -208,27 +208,18 @@ int ComportamientoRescatador::MenosPisadaR(Sensores sensores) {
   int min_visitas = INFINITY;
   int pos = -1;
   int indice_rumbo = sensores.rumbo;
-  vector<int> orden = {1, 0, 2, 5, 4, 6, 3, 7};
+  vector<int> orden = {1, 0, 2};
   for (int i : orden) {
     int posf = sensores.posF + posiciones_vision[indice_rumbo][i].first;
     int posc = sensores.posC + posiciones_vision[indice_rumbo][i].second;
-    if (i <= 2) {
-      if (memoria[posf][posc] < min_visitas &&
-          (sensores.superficie[i + 1] == 'C' ||
-           sensores.superficie[i + 1] == 'D') &&
-          sensores.agentes[i + 1] == '_' &&
-          ViablePorAlturaR(sensores.cota[i + 1] - sensores.cota[0],
-                           zapatillas)) {
-        pos = i + 1;
-        min_visitas = memoria[posf][posc];
-      }
-    } else {
-      if (memoria[posf][posc] < min_visitas &&
-          (sensores.superficie[i + 1] == 'C' ||
-           sensores.superficie[i + 1] == 'D')) {
-        pos = i + 1;
-        min_visitas = memoria[posf][posc];
-      }
+
+    if (memoria[posf][posc] < min_visitas &&
+        (sensores.superficie[i + 1] == 'C' ||
+         sensores.superficie[i + 1] == 'D') &&
+        ViablePorAlturaR(sensores.cota[i + 1] - sensores.cota[0], zapatillas) &&
+        sensores.agentes[i + 1] == '_') {
+      pos = i + 1;
+      min_visitas = memoria[posf][posc];
     }
   }
   return pos;
@@ -314,9 +305,13 @@ ComportamientoRescatador::ComportamientoRescatadorNivel_0(Sensores sensores) {
   } else if (giroizq != 0) {
     action = TURN_SR;
     giroizq--;
-
+  } else if (memoria[sensores.posF][sensores.posC] % 5 == 0 &&
+             memoria[sensores.posF][sensores.posC] != 0) {
+    memoria[sensores.posF][sensores.posC]++;
+    action = TURN_L;
   } else {
     int pos = CasillainteresanteR(sensores);
+
     switch (pos) {
     case 2:
       action = WALK;
@@ -328,91 +323,26 @@ ComportamientoRescatador::ComportamientoRescatadorNivel_0(Sensores sensores) {
     case 3:
       action = TURN_SR;
       break;
-    case 4:
-      if (sensores.superficie[1] == 'C' &&
-          ViablePorAlturaR(sensores.cota[0] - sensores.cota[1], zapatillas) &&
-          ViablePorAlturaR(sensores.cota[1] - sensores.cota[4], zapatillas) &&
-          sensores.agentes[1] == '_') {
-        action = TURN_L;
-        giroizq = 1;
-      } else {
-        action = TURN_SR;
-      }
-      break;
-    case 5:
-      if (sensores.superficie[2] == 'C' &&
-          ViablePorAlturaR(sensores.cota[0] - sensores.cota[2], zapatillas) &&
-          ViablePorAlturaR(sensores.cota[2] - sensores.cota[5], zapatillas) &&
-          sensores.agentes[2] == '_') {
-        action = WALK;
-      } else if ((sensores.superficie[1] == 'C') &&
-                 ViablePorAlturaR(sensores.cota[0] - sensores.cota[1],
-                                  zapatillas) &&
-                 ViablePorAlturaR(sensores.cota[1] - sensores.cota[5],
-                                  zapatillas) &&
-                 sensores.agentes[1] == '_') {
-        action = TURN_L;
-        giroizq = 1;
-      } else {
-        action = TURN_SR;
-      }
-      break;
-    case 6:
-      if (sensores.superficie[2] == 'C' &&
-          ViablePorAlturaR(sensores.cota[0] - sensores.cota[2], zapatillas) &&
-          ViablePorAlturaR(sensores.cota[2] - sensores.cota[6], zapatillas) &&
-          sensores.agentes[2] == '_') {
-        action = WALK;
-      } else {
-        action = TURN_SR;
-      }
-      break;
-    case 7:
-
-      if (sensores.superficie[2] == 'C' &&
-          ViablePorAlturaR(sensores.cota[0] - sensores.cota[2], zapatillas) &&
-          ViablePorAlturaR(sensores.cota[2] - sensores.cota[7], zapatillas) &&
-          sensores.agentes[2] == '_') {
-        action = WALK;
-      } else if ((sensores.superficie[3] == 'C') &&
-                 ViablePorAlturaR(sensores.cota[0] - sensores.cota[3],
-                                  zapatillas) &&
-                 ViablePorAlturaR(sensores.cota[3] - sensores.cota[7],
-                                  zapatillas) &&
-                 sensores.agentes[3] == '_') {
-        action = TURN_SR;
-      } else {
-        action = TURN_SR;
-      }
-
-      break;
-    case 8:
-      if (sensores.superficie[1] == 'C' &&
-          ViablePorAlturaR(sensores.cota[0] - sensores.cota[1], zapatillas) &&
-          ViablePorAlturaR(sensores.cota[1] - sensores.cota[4], zapatillas) &&
-          sensores.agentes[1] == '_') {
-        action = TURN_L;
-        giroizq = 1;
-      } else {
-        action = TURN_SR;
-      }
-      break;
-
     case 0:
-      action = TURN_SR;
+      if (static_cast<double>(rand()) / RAND_MAX < 0.7)
+        action = TURN_SR;
+      else {
+        action = TURN_L;
+        giroizq = 1;
+      }
       break;
     }
 
     if (pos != 0)
       memoria[sensores.posF][sensores.posC]++;
   }
+  next_action  = action;
 
   return action;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// codigo para el nivel 1
-/// ////////////////////////////////////////////////////
+/// codigo para el nivel 1 ////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 
 /*
@@ -522,13 +452,12 @@ ComportamientoRescatador::ComportamientoRescatadorNivel_1(Sensores sensores) {
     if (pos != 0)
       memoria[sensores.posF][sensores.posC]++;
   }
-  next_action = action;
+  next_action  = action;
   return action;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// codigo para el nivel 2
-/// ////////////////////////////////////////////////////
+/// codigo para el nivel 2 ////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 
 bool Find(const NodoR &st, const list<NodoR> &lista) {
@@ -751,12 +680,13 @@ void ComportamientoRescatador::PintaPlan(const list<Action> &plan, bool zap) {
  * se puede transitar por T , B (si aux tiene zapatillas como camino)  ,A para
  * auxiliar, C ,S
  * */
-int CalcularCoste(Action accion, const EstadoR &actual, const EstadoR &destino,
-                  const vector<vector<unsigned char>> &terreno,
-                  const vector<vector<unsigned char>> &altura) {
+double CalcularCoste(Action accion, const EstadoR &actual,
+                     const EstadoR &destino,
+                     const vector<vector<unsigned char>> &terreno,
+                     const vector<vector<unsigned char>> &altura) {
   double coste = 0.0;
   int diferencia = altura[actual.f][actual.c] - altura[destino.f][destino.c];
-  int signo = diferencia != 0 ? diferencia / abs(diferencia) : 0;
+	int signo = diferencia!=0 ? diferencia/abs(diferencia) : 0;
   if (accion == WALK) {
 
     if (terreno[actual.f][actual.c] == 'S')
@@ -797,7 +727,57 @@ int CalcularCoste(Action accion, const EstadoR &actual, const EstadoR &destino,
   }
   return coste;
 }
+list<Action> ComportamientoRescatador::DijkstraRescatador(
+    const EstadoR &inicio, const EstadoR &final,
+    const vector<vector<unsigned char>> &terreno,
+    const vector<vector<unsigned char>> &altura) {
+  NodoR nodo_actual;
+  set<NodoR> frontier = {};
+  set<NodoR> explored = {};
 
+  nodo_actual.estado = inicio;
+  nodo_actual.coste = 0.0;
+  frontier.insert(nodo_actual);
+  bool es_solucion;
+  NodoR solucion = nodo_actual;
+
+  while (!frontier.empty()) {
+    nodo_actual = *frontier.begin();
+    es_solucion =
+        (nodo_actual.estado.f == final.f && nodo_actual.estado.c == final.c);
+
+    frontier.erase(frontier.begin());
+    explored.insert(nodo_actual);
+    if (es_solucion && (solucion.coste > nodo_actual.coste)) {
+      solucion = nodo_actual;
+    }
+    if (terreno[nodo_actual.estado.f][nodo_actual.estado.c] == 'D') {
+      nodo_actual.estado.zapatillas = true;
+    }
+    NodoR hijo_walk = nodo_actual;
+    hijo_walk.estado = applyR(WALK, nodo_actual.estado, terreno, altura);
+    hijo_walk.coste += CalcularCoste(WALK, nodo_actual.estado, hijo_walk.estado,
+                                     terreno, altura);
+    NodoR hijo_turnsr = nodo_actual;
+    hijo_turnsr.estado = applyR(TURN_SR, nodo_actual.estado, terreno, altura);
+    hijo_turnsr.coste += CalcularCoste(TURN_SR, nodo_actual.estado,
+                                       hijo_turnsr.estado, terreno, altura);
+
+    if (explored.find(hijo_walk) == explored.end()) {
+      hijo_walk.secuencia.push_back(WALK);
+      cout << "nuevo walk" << endl;
+      frontier.insert(hijo_walk);
+    }
+
+    if (explored.find(hijo_turnsr) == explored.end()) {
+
+      cout << "nuevo walk" << endl;
+      hijo_turnsr.secuencia.push_back(TURN_SR);
+      frontier.insert(hijo_turnsr);
+    }
+  }
+  return solucion.secuencia;
+}
 list<Action> ComportamientoRescatador::DijkstraRescatadornew(
     const EstadoR &inicio, const EstadoR &final,
     const vector<vector<unsigned char>> &terreno,
@@ -810,13 +790,13 @@ list<Action> ComportamientoRescatador::DijkstraRescatadornew(
   };
 
   priority_queue<NodoR, vector<NodoR>, ComparadorCoste> frontier;
-  map<EstadoR, int> explorados;
+  map<EstadoR, double> mejor_coste;
 
   NodoR inicial;
   inicial.estado = inicio;
   inicial.coste = 0.0;
   frontier.push(inicial);
-  explorados[inicio] = 0.0;
+  mejor_coste[inicio] = 0.0;
 
   NodoR solucion;
   solucion.coste = INFINITY;
@@ -827,35 +807,32 @@ list<Action> ComportamientoRescatador::DijkstraRescatadornew(
 
     NodoR actual = frontier.top();
     frontier.pop();
-    if (actual.coste > explorados[actual.estado]) {
-      continue; // ya hemos procesado este estado con un mejor coste antes
-    }
 
     if (actual.estado.f == final.f && actual.estado.c == final.c &&
-        (actual.coste < solucion.coste)) {
+        (actual.coste < solucion.coste))
       solucion = actual;
-    }
 
+    // Zapatillas recogidas
     if (terreno[actual.estado.f][actual.estado.c] == 'D')
       actual.estado.zapatillas = true;
 
     for (int i = 0; i < genera_acciones.size(); i++) {
       NodoR hijo = actual;
       hijo.estado = applyR(genera_acciones[i], actual.estado, terreno, altura);
-      int coste_accion = CalcularCoste(genera_acciones[i], actual.estado,
-                                       hijo.estado, terreno, altura);
+      double coste_accion = CalcularCoste(genera_acciones[i], actual.estado,
+                                          hijo.estado, terreno, altura);
       hijo.coste += coste_accion;
       hijo.secuencia.push_back(genera_acciones[i]);
 
-      if (explorados.find(hijo.estado) == explorados.end() ||
-          explorados[hijo.estado] < hijo.coste) {
-        explorados[hijo.estado] = hijo.coste;
+      if (mejor_coste.find(hijo.estado) == mejor_coste.end() ||
+          (hijo.coste < mejor_coste[hijo.estado]) ) {
+        mejor_coste[hijo.estado] = hijo.coste;
         frontier.push(hijo);
       }
     }
   }
 
-  return solucion.secuencia;
+  return solucion.secuencia; 
 }
 
 Action
@@ -872,10 +849,9 @@ ComportamientoRescatador::ComportamientoRescatadorNivel_2(Sensores sensores) {
     fin.c = sensores.destinoC;
     plan = DijkstraRescatadornew(inicio, fin, mapaResultado, mapaCotas);
     VisualizaPlan(inicio, plan);
-    hayPlan = (plan.size() != 0);
+    hayPlan = plan.size() != 0;
   }
   if (hayPlan and plan.size() > 0) {
-
     accion = plan.front();
     plan.pop_front();
   }
