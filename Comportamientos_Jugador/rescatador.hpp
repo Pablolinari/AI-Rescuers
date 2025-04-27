@@ -32,12 +32,28 @@ struct EstadoR {
     else
       return false;
   }
+  EstadoR &operator=(const EstadoR &st) {
+    if (this != &st) {
+      f = st.f;
+      c = st.c;
+      brujula = st.brujula;
+      zapatillas = st.zapatillas;
+    }
+    return *this;
+  }
 };
 struct NodoR {
   EstadoR estado;
   list<Action> secuencia;
   int coste;
-  bool operator==(const NodoR &nodo) const { return estado == nodo.estado; }
+  NodoR() {
+    estado = EstadoR();
+    coste = 0;
+    secuencia = {};
+  }
+  bool operator==(const NodoR &nodo) const {
+    return estado == nodo.estado && nodo.coste == coste;
+  }
   bool operator<(const NodoR &node) const {
     if (coste != node.coste) {
       return coste < node.coste;
@@ -45,6 +61,7 @@ struct NodoR {
       return estado < node.estado;
     }
   }
+
 };
 class ComportamientoRescatador : public Comportamiento {
 
@@ -63,9 +80,9 @@ public:
                            std::vector<std::vector<unsigned char>> mapaC)
       : Comportamiento(mapaR, mapaC) {
     // Inicializar Variables de Estado Niveles 2,3
-		this->hayPlan=false;
-		this->zapatillas=false;
-		this->plan={};
+    this->hayPlan = false;
+    this->zapatillas = false;
+    this->plan = {};
   }
   ComportamientoRescatador(const ComportamientoRescatador &comport)
       : Comportamiento(comport) {}
@@ -88,10 +105,11 @@ public:
   list<Action> DijkstraRescatador(const EstadoR &inicio, const EstadoR &final,
                                   const vector<vector<unsigned char>> &terreno,
                                   const vector<vector<unsigned char>> &altura);
-list<Action>DijkstraRescatadornew(
-    const EstadoR &inicio, const EstadoR &final,
-    const vector<vector<unsigned char>> &terreno,
-    const vector<vector<unsigned char>> &altura) ;
+  list<Action>
+  DijkstraRescatadornew(const EstadoR &inicio, const EstadoR &final,
+                        const vector<vector<unsigned char>> &terreno,
+                        const vector<vector<unsigned char>> &altura);
+
 private:
   // Variables de Estado
   Action next_action;
@@ -100,7 +118,7 @@ private:
   bool zapatillas;
   int orientar;
   bool hayPlan;
-	bool camino_opcional;
+  bool camino_opcional;
   list<Action> plan;
   std::vector<std::vector<int>> memoria;
 };

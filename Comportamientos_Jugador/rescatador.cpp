@@ -200,6 +200,10 @@ bool ViablePorAlturaR(int dif, bool zap) {
   return (abs(dif) <= 1 or (zap and abs(dif) <= 2));
 }
 /*
+ *Devuelve true si una casilla es accesible para el nivel 1
+ */
+bool CasillaValida0R(char a) { return a == 'C' || a == 'D'; }
+/*
  * Busca la casilla menos pisada entre las
  * tres primeras opciones del rango de vision
  */
@@ -208,50 +212,42 @@ int ComportamientoRescatador::MenosPisadaR(Sensores sensores) {
   int min_visitas = INFINITY;
   int pos = -1;
   int indice_rumbo = sensores.rumbo;
-  vector<int> orden = {1, 0, 2};
+  vector<int> orden = {1, 0, 2, 3, 4, 5, 6, 7};
   for (int i : orden) {
     int posf = sensores.posF + posiciones_vision[indice_rumbo][i].first;
     int posc = sensores.posC + posiciones_vision[indice_rumbo][i].second;
-
-    if (memoria[posf][posc] < min_visitas &&
-        (sensores.superficie[i + 1] == 'C' ||
-         sensores.superficie[i + 1] == 'D') &&
-        ViablePorAlturaR(sensores.cota[i + 1] - sensores.cota[0], zapatillas) &&
-        sensores.agentes[i + 1] == '_') {
-      pos = i + 1;
-      min_visitas = memoria[posf][posc];
+    if (i <= 2) {
+      if (memoria[posf][posc] < min_visitas &&
+          CasillaValida0R(sensores.superficie[i + 1]) &&
+          ViablePorAlturaR(sensores.cota[i + 1] - sensores.cota[0],
+                           zapatillas) &&
+          sensores.agentes[i + 1] == '_') {
+        pos = i + 1;
+        min_visitas = memoria[posf][posc];
+      }
+    } else {
+      switch (i) {
+      case 3:
+        if (memoria[posf][posc] < min_visitas &&
+            CasillaValida0R(sensores.superficie[i + 1]) &&
+            CasillaValida0R(sensores.superficie[1]) &&
+            ViablePorAlturaR(sensores.cota[i + 1] - sensores.cota[0],
+                             zapatillas) &&
+            sensores.agentes[1] == '_' && sensores.agentes[i + 1] == '_')
+          break;
+      case 4:
+        break;
+      case 5:
+        break;
+      case 6:
+        break;
+      case 7:
+        break;
+      }
     }
   }
   return pos;
 }
-
-/*
- * Busca la casilla menos pisada entre las
- * tres primeras opciones del rango de vision
- */
-
-int ComportamientoRescatador::MenosPisadaR1(Sensores sensores) {
-  int min_visitas = INFINITY;
-  int pos = -1;
-  int indice_rumbo = sensores.rumbo;
-  vector<int> orden = {1, 0, 2};
-  for (int i : orden) {
-    int posf = sensores.posF + posiciones_vision[indice_rumbo][i].first;
-    int posc = sensores.posC + posiciones_vision[indice_rumbo][i].second;
-
-    if (memoria[posf][posc] < min_visitas &&
-        (sensores.superficie[i + 1] == 'C' ||
-         sensores.superficie[i + 1] == 'S' ||
-         sensores.superficie[i + 1] == 'D') &&
-        ViablePorAlturaR(sensores.cota[i + 1] - sensores.cota[0], zapatillas) &&
-        sensores.agentes[i + 1] == '_') {
-      pos = i + 1;
-      min_visitas = memoria[posf][posc];
-    }
-  }
-  return pos;
-}
-
 /*
  * funcion que determina que casilla debe tomar como interesante
  * el agente , posteriormente se movera n esa direccion
@@ -336,7 +332,7 @@ ComportamientoRescatador::ComportamientoRescatadorNivel_0(Sensores sensores) {
     if (pos != 0)
       memoria[sensores.posF][sensores.posC]++;
   }
-  next_action  = action;
+  next_action = action;
 
   return action;
 }
@@ -344,6 +340,33 @@ ComportamientoRescatador::ComportamientoRescatadorNivel_0(Sensores sensores) {
 ////////////////////////////////////////////////////////////////////////////////
 /// codigo para el nivel 1 ////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
+
+/*
+ * Busca la casilla menos pisada entre las
+ * tres primeras opciones del rango de vision
+ */
+
+int ComportamientoRescatador::MenosPisadaR1(Sensores sensores) {
+  int min_visitas = INFINITY;
+  int pos = -1;
+  int indice_rumbo = sensores.rumbo;
+  vector<int> orden = {1, 0, 2};
+  for (int i : orden) {
+    int posf = sensores.posF + posiciones_vision[indice_rumbo][i].first;
+    int posc = sensores.posC + posiciones_vision[indice_rumbo][i].second;
+
+    if (memoria[posf][posc] < min_visitas &&
+        (sensores.superficie[i + 1] == 'C' ||
+         sensores.superficie[i + 1] == 'S' ||
+         sensores.superficie[i + 1] == 'D') &&
+        ViablePorAlturaR(sensores.cota[i + 1] - sensores.cota[0], zapatillas) &&
+        sensores.agentes[i + 1] == '_') {
+      pos = i + 1;
+      min_visitas = memoria[posf][posc];
+    }
+  }
+  return pos;
+}
 
 /*
  * funcion casilla interesante para el nivel 1
@@ -452,7 +475,7 @@ ComportamientoRescatador::ComportamientoRescatadorNivel_1(Sensores sensores) {
     if (pos != 0)
       memoria[sensores.posF][sensores.posC]++;
   }
-  next_action  = action;
+  next_action = action;
   return action;
 }
 
@@ -460,13 +483,6 @@ ComportamientoRescatador::ComportamientoRescatadorNivel_1(Sensores sensores) {
 /// codigo para el nivel 2 ////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 
-bool Find(const NodoR &st, const list<NodoR> &lista) {
-  auto it = lista.begin();
-  while (it != lista.end() and !((*it) == st)) {
-    it++;
-  }
-  return (it != lista.end());
-}
 void AnularMatrizR(vector<vector<unsigned char>> &m) {
   for (int i = 0; i < m[0].size(); i++) {
     for (int j = 0; j < m.size(); j++) {
@@ -597,7 +613,7 @@ bool CasillaAccesibleR(const EstadoR &st,
                        const vector<vector<unsigned char>> &altura) {
   EstadoR next = NextCasillaR(st);
   bool check1 = false, check2 = false;
-  check1 = terreno[next.f][next.c] != 'P' and terreno[next.f][next.c] != 'M' and
+  check1 = terreno[next.f][next.c] != 'P' and terreno[next.f][next.c] != 'M' &&
            terreno[next.f][next.c] != 'B';
 
   check2 = ViablePorAlturaR(altura[next.f][next.c] - altura[st.f][st.c],
@@ -680,13 +696,19 @@ void ComportamientoRescatador::PintaPlan(const list<Action> &plan, bool zap) {
  * se puede transitar por T , B (si aux tiene zapatillas como camino)  ,A para
  * auxiliar, C ,S
  * */
-double CalcularCoste(Action accion, const EstadoR &actual,
-                     const EstadoR &destino,
-                     const vector<vector<unsigned char>> &terreno,
-                     const vector<vector<unsigned char>> &altura) {
-  double coste = 0.0;
+int CalcularCoste(Action accion, const EstadoR &actual, const EstadoR &destino,
+                  const vector<vector<unsigned char>> &terreno,
+                  const vector<vector<unsigned char>> &altura) {
+  int coste = 0;
   int diferencia = altura[actual.f][actual.c] - altura[destino.f][destino.c];
-	int signo = diferencia!=0 ? diferencia/abs(diferencia) : 0;
+  int signo;
+  if (diferencia == 0) {
+    signo = 0;
+  } else if (diferencia < 0) {
+    signo = -1;
+  } else if (diferencia > 0) {
+    signo = 1;
+  }
   if (accion == WALK) {
 
     if (terreno[actual.f][actual.c] == 'S')
@@ -731,51 +753,51 @@ list<Action> ComportamientoRescatador::DijkstraRescatador(
     const EstadoR &inicio, const EstadoR &final,
     const vector<vector<unsigned char>> &terreno,
     const vector<vector<unsigned char>> &altura) {
+
+  struct ComparadorCoste {
+    bool operator()(const NodoR &a, const NodoR &b) const {
+      return a.coste > b.coste; // menor coste = mayor prioridad
+    }
+  };
   NodoR nodo_actual;
-  set<NodoR> frontier = {};
-  set<NodoR> explored = {};
+  NodoR solucion;
+  solucion.coste = INFINITY;
+  priority_queue<NodoR, vector<NodoR>, ComparadorCoste> frontier = {};
+  map<EstadoR, int> explored = {};
 
   nodo_actual.estado = inicio;
-  nodo_actual.coste = 0.0;
-  frontier.insert(nodo_actual);
-  bool es_solucion;
-  NodoR solucion = nodo_actual;
+  explored[inicio] = 0;
+  frontier.push(nodo_actual);
 
   while (!frontier.empty()) {
-    nodo_actual = *frontier.begin();
-    es_solucion =
-        (nodo_actual.estado.f == final.f && nodo_actual.estado.c == final.c);
+    nodo_actual = frontier.top();
+    frontier.pop();
 
-    frontier.erase(frontier.begin());
-    explored.insert(nodo_actual);
-    if (es_solucion && (solucion.coste > nodo_actual.coste)) {
-      solucion = nodo_actual;
+    if (nodo_actual.estado.f == final.f && nodo_actual.estado.c == final.c &&
+        nodo_actual.coste < solucion.coste) {
+      solucion.coste = nodo_actual.coste;
+      solucion.estado = nodo_actual.estado;
+      solucion.secuencia = nodo_actual.secuencia;
     }
-    if (terreno[nodo_actual.estado.f][nodo_actual.estado.c] == 'D') {
+    if (terreno[nodo_actual.estado.f][nodo_actual.estado.c] == 'D')
       nodo_actual.estado.zapatillas = true;
-    }
-    NodoR hijo_walk = nodo_actual;
-    hijo_walk.estado = applyR(WALK, nodo_actual.estado, terreno, altura);
-    hijo_walk.coste += CalcularCoste(WALK, nodo_actual.estado, hijo_walk.estado,
-                                     terreno, altura);
-    NodoR hijo_turnsr = nodo_actual;
-    hijo_turnsr.estado = applyR(TURN_SR, nodo_actual.estado, terreno, altura);
-    hijo_turnsr.coste += CalcularCoste(TURN_SR, nodo_actual.estado,
-                                       hijo_turnsr.estado, terreno, altura);
 
-    if (explored.find(hijo_walk) == explored.end()) {
-      hijo_walk.secuencia.push_back(WALK);
-      cout << "nuevo walk" << endl;
-      frontier.insert(hijo_walk);
-    }
-
-    if (explored.find(hijo_turnsr) == explored.end()) {
-
-      cout << "nuevo walk" << endl;
-      hijo_turnsr.secuencia.push_back(TURN_SR);
-      frontier.insert(hijo_turnsr);
+    for (auto i : {WALK, RUN, TURN_L, TURN_SR}) {
+      NodoR hijo = nodo_actual;
+      hijo.estado = applyR(i, nodo_actual.estado, terreno, altura);
+      hijo.coste = hijo.coste + CalcularCoste(i, nodo_actual.estado,
+                                              hijo.estado, terreno, altura);
+      if (explored.find(hijo.estado) == explored.end()) {
+        frontier.push(hijo);
+        hijo.secuencia.push_back(i);
+      } else if (explored[hijo.estado] > hijo.coste) {
+        explored[hijo.estado] = hijo.coste;
+        frontier.push(hijo);
+        hijo.secuencia.push_back(i);
+      }
     }
   }
+
   return solucion.secuencia;
 }
 list<Action> ComportamientoRescatador::DijkstraRescatadornew(
@@ -783,58 +805,64 @@ list<Action> ComportamientoRescatador::DijkstraRescatadornew(
     const vector<vector<unsigned char>> &terreno,
     const vector<vector<unsigned char>> &altura) {
 
+  // Comparador para la cola de prioridad (menor coste tiene mayor prioridad)
   struct ComparadorCoste {
     bool operator()(const NodoR &a, const NodoR &b) const {
-      return a.coste > b.coste; // menor coste = mayor prioridad
+      return a.coste > b.coste;
     }
   };
 
+  // Cola de prioridad para explorar los nodos
   priority_queue<NodoR, vector<NodoR>, ComparadorCoste> frontier;
+
+  // Mapa para registrar el menor coste encontrado para cada estado
   map<EstadoR, double> mejor_coste;
 
-  NodoR inicial;
-  inicial.estado = inicio;
-  inicial.coste = 0.0;
-  frontier.push(inicial);
-  mejor_coste[inicio] = 0.0;
-
-  NodoR solucion;
-  solucion.coste = INFINITY;
+  // Nodo inicial
+  NodoR actual;
+  actual.estado = inicio;
+  actual.coste = 0.0;
+  frontier.push(actual);
+  mejor_coste[actual.estado] = 0.0;
 
   while (!frontier.empty()) {
-
-    // Selecciono el nodo no explorado con menor coste
-
-    NodoR actual = frontier.top();
+    // Extraemos el nodo con menor coste
+    actual = frontier.top();
     frontier.pop();
 
-    if (actual.estado.f == final.f && actual.estado.c == final.c &&
-        (actual.coste < solucion.coste))
-      solucion = actual;
+    // Si llegamos al estado final, devolvemos la secuencia de acciones
+    if (actual.estado.f == final.f && actual.estado.c == final.c) {
+      return actual.secuencia;
+    }
 
-    // Zapatillas recogidas
-    if (terreno[actual.estado.f][actual.estado.c] == 'D')
+    // Si estamos en una casilla con zapatillas, actualizamos el estado
+    if (terreno[actual.estado.f][actual.estado.c] == 'D') {
       actual.estado.zapatillas = true;
+    }
 
-    for (int i = 0; i < genera_acciones.size(); i++) {
+    // Generamos los nodos hijos para cada acción posible
+    for (const auto &accion : genera_acciones) {
       NodoR hijo = actual;
-      hijo.estado = applyR(genera_acciones[i], actual.estado, terreno, altura);
-      double coste_accion = CalcularCoste(genera_acciones[i], actual.estado,
-                                          hijo.estado, terreno, altura);
-      hijo.coste += coste_accion;
-      hijo.secuencia.push_back(genera_acciones[i]);
+      hijo.estado = applyR(accion, actual.estado, terreno, altura);
 
+      // Calculamos el coste de la acción
+      double coste_accion =
+          CalcularCoste(accion, actual.estado, hijo.estado, terreno, altura);
+      hijo.coste = actual.coste + coste_accion;
+
+      // Si encontramos un camino más barato al estado hijo, lo procesamos
       if (mejor_coste.find(hijo.estado) == mejor_coste.end() ||
-          (hijo.coste < mejor_coste[hijo.estado]) ) {
+          mejor_coste[hijo.estado] > hijo.coste) {
         mejor_coste[hijo.estado] = hijo.coste;
+        hijo.secuencia.push_back(accion);
         frontier.push(hijo);
       }
     }
   }
 
-  return solucion.secuencia; 
+  // Si no se encuentra solución, devolvemos una lista vacía
+  return {};
 }
-
 Action
 ComportamientoRescatador::ComportamientoRescatadorNivel_2(Sensores sensores) {
   Action accion = IDLE;
