@@ -158,7 +158,7 @@ Action ComportamientoAuxiliar::think(Sensores sensores) {
     accion = ComportamientoAuxiliarNivel_2(sensores);
     break;
   case 3:
-    // accion = ComportamientoAuxiliarNivel_3 (sensores);
+    accion = ComportamientoAuxiliarNivel_3 (sensores);
     break;
   case 4:
     // accion = ComportamientoAuxiliarNivel_4 (sensores);
@@ -1028,15 +1028,15 @@ list<Action> ComportamientoAuxiliar::AestrellaA(
       hijoturn.estado = applyA(TURN_SR, actual.estado, terreno, altura);
       hijoturn.coste =
           hijoturn.coste +
-          CalcularCosteA(WALK, actual.estado, hijoturn.estado, terreno, altura);
-      if (explorados.find(hijowalk.estado) == explorados.end()) {
-        hijowalk.secuencia.push_back(WALK);
-        frontier.push(hijowalk);
+          CalcularCosteA(TURN_SR, actual.estado, hijoturn.estado, terreno, altura);
+      if (explorados.find(hijoturn.estado) == explorados.end()) {
+        hijoturn.secuencia.push_back(TURN_SR);
+        frontier.push(hijoturn);
       }
-      else if (explorados[hijowalk.estado] < hijowalk.coste) {
-        hijowalk.secuencia.push_back(WALK);
-        frontier.push(hijowalk);
-        explorados[hijowalk.estado] = hijowalk.coste;
+      else if (explorados[hijoturn.estado] < hijoturn.coste) {
+        hijoturn.secuencia.push_back(TURN_SR);
+        frontier.push(hijoturn);
+        explorados[hijoturn.estado] = hijoturn.coste;
       }
     }
   }

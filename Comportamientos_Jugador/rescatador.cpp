@@ -483,7 +483,9 @@ ComportamientoRescatador::ComportamientoRescatadorNivel_0(Sensores sensores) {
 /// codigo para el nivel 1 ////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 
-bool CasillaValida1R(char a) { return a == 'C' || a == 'D' || a == 'S'||a=='X'; }
+bool CasillaValida1R(char a) {
+  return a == 'C' || a == 'D' || a == 'S' || a == 'X';
+}
 /*
  * funcion casilla interesante para el nivel 1
  */
@@ -1133,7 +1135,11 @@ list<Action> ComportamientoRescatador::DijkstraRescatadornew(
   actual.coste = 0.0;
   frontier.push(actual);
   mejor_coste[actual.estado] = 0.0;
+  if (terreno[actual.estado.f][actual.estado.c] == 'D') {
+    actual.estado.zapatillas = true;
+  }
 
+  frontier.push(actual);
   while (!frontier.empty()) {
     // Extraemos el nodo con menor coste
     actual = frontier.top();
@@ -1145,23 +1151,25 @@ list<Action> ComportamientoRescatador::DijkstraRescatadornew(
     }
 
     // Si estamos en una casilla con zapatillas, actualizamos el estado
-    if (terreno[actual.estado.f][actual.estado.c] == 'D') {
-      actual.estado.zapatillas = true;
-    }
 
     // Generamos los nodos hijos para cada acción posible
     for (const auto &accion : genera_acciones) {
-      NodoR hijo = actual;
+      NodoR hijo;
+			hijo.secuencia=actual.secuencia;
+			hijo.coste=actual.coste;
+			hijo.estado=actual.estado;
       hijo.estado = applyR(accion, actual.estado, terreno, altura);
-
+      if (terreno[hijo.estado.f][hijo.estado.c] == 'D') {
+        actual.estado.zapatillas = true;
+      }
       // Calculamos el coste de la acción
       double coste_accion =
           CalcularCoste(accion, actual.estado, hijo.estado, terreno, altura);
       hijo.coste = actual.coste + coste_accion;
 
       // Si encontramos un camino más barato al estado hijo, lo procesamos
-      if (mejor_coste.find(hijo.estado) == mejor_coste.end() ||
-          mejor_coste[hijo.estado] > hijo.coste) {
+      auto it = mejor_coste.find(hijo.estado);
+      if (it == mejor_coste.end() || it->second > hijo.coste) {
         mejor_coste[hijo.estado] = hijo.coste;
         hijo.secuencia.push_back(accion);
         frontier.push(hijo);
