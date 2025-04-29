@@ -46,7 +46,10 @@ public:
     this->giro180 = 0;
     this->zapatillas = false;
     this->last_action = IDLE;
-		this->camino_alternativo=false;
+		this->camino_opcional=0;
+		this->extrawalk=false;
+		this->extraturni=false;
+		this->extraturnd=false;
     this->memoria = vector<vector<int>>(128, vector<int>(128, 0));
   }
   ComportamientoAuxiliar(std::vector<std::vector<unsigned char>> mapaR,
@@ -91,7 +94,10 @@ private:
   std::vector<std::vector<int>> memoria;
   list<Action> plan;
   bool hayPlan;
-  bool camino_alternativo;
+	bool extrawalk;
+	bool extraturni;
+	bool extraturnd;
+	int camino_opcional;
 };
 
 #endif

@@ -61,7 +61,6 @@ struct NodoR {
       return estado < node.estado;
     }
   }
-
 };
 class ComportamientoRescatador : public Comportamiento {
 
@@ -73,7 +72,10 @@ public:
     this->giroizq = 0;
     this->zapatillas = false;
     this->next_action = IDLE;
-    this->camino_opcional = false;
+    this->camino_opcional = 0;
+		this->extraturnd=false;
+		this->extraturni=false;
+		this->extrawalk=false;
     this->memoria = vector<vector<int>>(128, vector<int>(128, 0));
   }
   ComportamientoRescatador(std::vector<std::vector<unsigned char>> mapaR,
@@ -118,7 +120,10 @@ private:
   bool zapatillas;
   int orientar;
   bool hayPlan;
-  bool camino_opcional;
+	bool extrawalk;
+	bool extraturni;
+	bool extraturnd;
+  int camino_opcional;
   list<Action> plan;
   std::vector<std::vector<int>> memoria;
 };
