@@ -1011,7 +1011,7 @@ int CalcularCoste(Action accion, const EstadoR &actual, const EstadoR &destino,
                   const vector<vector<unsigned char>> &terreno,
                   const vector<vector<unsigned char>> &altura) {
   int coste = 0;
-  int diferencia = altura[actual.f][actual.c] - altura[destino.f][destino.c];
+  int diferencia = altura[destino.f][destino.c]-altura[actual.f][actual.c];
   int signo;
   if (diferencia == 0) {
     signo = 0;
@@ -1060,57 +1060,8 @@ int CalcularCoste(Action accion, const EstadoR &actual, const EstadoR &destino,
   }
   return coste;
 }
-list<Action> ComportamientoRescatador::DijkstraRescatador(
-    const EstadoR &inicio, const EstadoR &final,
-    const vector<vector<unsigned char>> &terreno,
-    const vector<vector<unsigned char>> &altura) {
 
-  struct ComparadorCoste {
-    bool operator()(const NodoR &a, const NodoR &b) const {
-      return a.coste > b.coste; // menor coste = mayor prioridad
-    }
-  };
-  NodoR nodo_actual;
-  NodoR solucion;
-  solucion.coste = INFINITY;
-  priority_queue<NodoR, vector<NodoR>, ComparadorCoste> frontier = {};
-  map<EstadoR, int> explored = {};
 
-  nodo_actual.estado = inicio;
-  explored[inicio] = 0;
-  frontier.push(nodo_actual);
-
-  while (!frontier.empty()) {
-    nodo_actual = frontier.top();
-    frontier.pop();
-
-    if (nodo_actual.estado.f == final.f && nodo_actual.estado.c == final.c &&
-        nodo_actual.coste < solucion.coste) {
-      solucion.coste = nodo_actual.coste;
-      solucion.estado = nodo_actual.estado;
-      solucion.secuencia = nodo_actual.secuencia;
-    }
-    if (terreno[nodo_actual.estado.f][nodo_actual.estado.c] == 'D')
-      nodo_actual.estado.zapatillas = true;
-
-    for (auto i : {WALK, RUN, TURN_L, TURN_SR}) {
-      NodoR hijo = nodo_actual;
-      hijo.estado = applyR(i, nodo_actual.estado, terreno, altura);
-      hijo.coste = hijo.coste + CalcularCoste(i, nodo_actual.estado,
-                                              hijo.estado, terreno, altura);
-      if (explored.find(hijo.estado) == explored.end()) {
-        frontier.push(hijo);
-        hijo.secuencia.push_back(i);
-      } else if (explored[hijo.estado] > hijo.coste) {
-        explored[hijo.estado] = hijo.coste;
-        frontier.push(hijo);
-        hijo.secuencia.push_back(i);
-      }
-    }
-  }
-
-  return solucion.secuencia;
-}
 list<Action> ComportamientoRescatador::DijkstraRescatadornew(
     const EstadoR &inicio, const EstadoR &final,
     const vector<vector<unsigned char>> &terreno,
@@ -1127,14 +1078,14 @@ list<Action> ComportamientoRescatador::DijkstraRescatadornew(
   priority_queue<NodoR, vector<NodoR>, ComparadorCoste> frontier;
 
   // Mapa para registrar el menor coste encontrado para cada estado
-  map<EstadoR, double> mejor_coste;
+  map<EstadoR, int> mejor_coste;
 
   // Nodo inicial
   NodoR actual;
   actual.estado = inicio;
-  actual.coste = 0.0;
+  actual.coste = 0;
   frontier.push(actual);
-  mejor_coste[actual.estado] = 0.0;
+  mejor_coste[actual.estado] = 0;
   if (terreno[actual.estado.f][actual.estado.c] == 'D') {
     actual.estado.zapatillas = true;
   }
@@ -1150,17 +1101,20 @@ list<Action> ComportamientoRescatador::DijkstraRescatadornew(
       return actual.secuencia;
     }
 
+  if (terreno[actual.estado.f][actual.estado.c] == 'D') {
+    actual.estado.zapatillas = true;
+  }
     // Si estamos en una casilla con zapatillas, actualizamos el estado
 
     // Generamos los nodos hijos para cada acción posible
     for (const auto &accion : genera_acciones) {
       NodoR hijo;
-			hijo.secuencia=actual.secuencia;
-			hijo.coste=actual.coste;
-			hijo.estado=actual.estado;
+      hijo.secuencia = actual.secuencia;
+      hijo.coste = actual.coste;
+      hijo.estado = actual.estado;
       hijo.estado = applyR(accion, actual.estado, terreno, altura);
       if (terreno[hijo.estado.f][hijo.estado.c] == 'D') {
-        actual.estado.zapatillas = true;
+        hijo.estado.zapatillas = true;
       }
       // Calculamos el coste de la acción
       double coste_accion =

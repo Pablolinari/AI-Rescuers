@@ -158,7 +158,7 @@ Action ComportamientoAuxiliar::think(Sensores sensores) {
     accion = ComportamientoAuxiliarNivel_2(sensores);
     break;
   case 3:
-    accion = ComportamientoAuxiliarNivel_3 (sensores);
+    accion = ComportamientoAuxiliarNivel_3(sensores);
     break;
   case 4:
     // accion = ComportamientoAuxiliarNivel_4 (sensores);
@@ -792,14 +792,6 @@ void AnularMatrizA(vector<vector<unsigned char>> &m) {
   }
 }
 
-bool Find(const NodoA &st, const list<NodoA> &lista) {
-  auto it = lista.begin();
-  while (it != lista.end() and !((*it) == st)) {
-    it++;
-  }
-  return (it != lista.end());
-}
-
 void ComportamientoAuxiliar::VisualizaPlan(const EstadoA &st,
                                            const list<Action> &plan) {
   AnularMatrizA(mapaConPlan);
@@ -838,19 +830,15 @@ void ComportamientoAuxiliar::VisualizaPlan(const EstadoA &st,
         cst.c--;
         break;
       }
-      mapaConPlan[cst.f][cst.c] = 1;
+      mapaConPlan[cst.f][cst.c] = 2;
       break;
     case TURN_SR:
       cst.brujula = (cst.brujula + 1) % 8;
-      break;
-    case TURN_L:
-      cst.brujula = (cst.brujula + 6) % 8;
       break;
     }
     it++;
   }
 }
-
 EstadoA NextCasillaA(const EstadoA &st) {
   EstadoA siguiente = st;
   switch (st.brujula) {
@@ -885,8 +873,8 @@ EstadoA NextCasillaA(const EstadoA &st) {
   return siguiente;
 }
 bool CasillaAccesibleA(const EstadoA &st,
-                       const vector<vector<unsigned char>> &terreno,
-                       const vector<vector<unsigned char>> &altura) {
+                              const vector<vector<unsigned char>> &terreno,
+                              const vector<vector<unsigned char>> &altura) {
   EstadoA next = NextCasillaA(st);
   bool check1 = false, check2 = false, check3 = false;
   check1 = terreno[next.f][next.c] != 'P' and terreno[next.f][next.c] != 'M';
@@ -895,7 +883,6 @@ bool CasillaAccesibleA(const EstadoA &st,
   check3 = abs(altura[next.f][next.c] - altura[st.f][st.c]) <= 1;
   return check1 and check2 and check3;
 }
-
 EstadoA applyA(Action accion, const EstadoA &st,
                const vector<vector<unsigned char>> &terreno,
                const vector<vector<unsigned char>> &altura) {
@@ -912,7 +899,6 @@ EstadoA applyA(Action accion, const EstadoA &st,
   }
   return next;
 }
-
 void ComportamientoAuxiliar::PintaPlan(const list<Action> &plan, bool zap) {
   auto it = plan.begin();
   while (it != plan.end()) {
@@ -944,8 +930,16 @@ int CalcularCosteA(Action accion, const EstadoA &actual, const EstadoA &destino,
                    const vector<vector<unsigned char>> &terreno,
                    const vector<vector<unsigned char>> &altura) {
   int coste = 0;
-  int diferencia = altura[actual.f][actual.c] - altura[destino.f][destino.c];
-  int signo = diferencia != 0 ? diferencia / abs(diferencia) : 0;
+  int diferencia = altura[destino.f][destino.c] - altura[actual.f][destino.c];
+  int signo;
+  if (diferencia == 0) {
+    signo = 0;
+  } else if (diferencia < 0) {
+    signo = -1;
+  } else if (diferencia > 0) {
+    signo = 1;
+  }
+
   if (accion == WALK) {
 
     if (terreno[actual.f][actual.c] == 'S')
@@ -991,57 +985,61 @@ list<Action> ComportamientoAuxiliar::AestrellaA(
   priority_queue<NodoA, std::vector<NodoA>, ComparadorCoste> frontier(
       (ComparadorCoste(final)));
 
-  map<EstadoA, int> explorados;
+  // Mapa para registrar el menor coste encontrado para cada estado
+  map<EstadoA, int> mejor_coste;
+
+  // Nodo inicial
   NodoA actual;
   actual.estado = inicio;
   actual.coste = 0;
   frontier.push(actual);
-  explorados[inicio] = 0;
-  bool es_solucion = (actual.estado.f == final.f && actual.estado.c == final.c);
-  while (!frontier.empty() && !es_solucion) {
+  mejor_coste[actual.estado] = 0;
+  if (terreno[actual.estado.f][actual.estado.c] == 'D') {
+    actual.estado.zapatillas = true;
+  }
+
+  frontier.push(actual);
+  while (!frontier.empty()) {
+    // Extraemos el nodo con menor coste
+    actual = frontier.top();
     frontier.pop();
-    explorados[actual.estado] = actual.coste;
+
+    // Si llegamos al estado final, devolvemos la secuencia de acciones
+    if (actual.estado.f == final.f && actual.estado.c == final.c) {
+      return actual.secuencia;
+    }
+
     if (terreno[actual.estado.f][actual.estado.c] == 'D') {
       actual.estado.zapatillas = true;
     }
 
-    NodoA hijowalk = actual;
-    hijowalk.estado = applyA(WALK, actual.estado, terreno, altura);
-    hijowalk.coste =
-        hijowalk.coste +
-        CalcularCosteA(WALK, actual.estado, hijowalk.estado, terreno, altura);
-    if (hijowalk.estado.f == final.f && hijowalk.estado.c == final.c) {
-      hijowalk.secuencia.push_back(WALK);
-      actual = hijowalk;
-      es_solucion = true;
-    } else if (explorados.find(hijowalk.estado) == explorados.end()) {
-      hijowalk.secuencia.push_back(WALK);
-      frontier.push(hijowalk);
-    } else if (explorados[hijowalk.estado] < hijowalk.coste) {
-      hijowalk.secuencia.push_back(WALK);
-      frontier.push(hijowalk);
-      explorados[hijowalk.estado] = hijowalk.coste;
-    }
-    if (!es_solucion) {
-
-      NodoA hijoturn = actual;
-      hijoturn.estado = applyA(TURN_SR, actual.estado, terreno, altura);
-      hijoturn.coste =
-          hijoturn.coste +
-          CalcularCosteA(TURN_SR, actual.estado, hijoturn.estado, terreno, altura);
-      if (explorados.find(hijoturn.estado) == explorados.end()) {
-        hijoturn.secuencia.push_back(TURN_SR);
-        frontier.push(hijoturn);
+    // Generamos los nodos hijos para cada acción posible
+    for (const auto &accion : genera_acciones) {
+      NodoA hijo;
+      hijo.secuencia = actual.secuencia;
+      hijo.coste = actual.coste;
+      hijo.estado = actual.estado;
+      hijo.estado = applyA(accion, actual.estado, terreno, altura);
+      if (terreno[hijo.estado.f][hijo.estado.c] == 'D') {
+        hijo.estado.zapatillas = true;
       }
-      else if (explorados[hijoturn.estado] < hijoturn.coste) {
-        hijoturn.secuencia.push_back(TURN_SR);
-        frontier.push(hijoturn);
-        explorados[hijoturn.estado] = hijoturn.coste;
+      // Calculamos el coste de la acción
+      double coste_accion =
+          CalcularCosteA(accion, actual.estado, hijo.estado, terreno, altura);
+      hijo.coste = actual.coste + coste_accion;
+
+      // Si encontramos un camino más barato al estado hijo, lo procesamos
+      auto it = mejor_coste.find(hijo.estado);
+      if (it == mejor_coste.end() || it->second > hijo.coste) {
+        mejor_coste[hijo.estado] = hijo.coste;
+        hijo.secuencia.push_back(accion);
+        frontier.push(hijo);
       }
     }
   }
-	if(es_solucion)return actual.secuencia;
-	else return {};
+
+  // Si no se encuentra solución, devolvemos una lista vacía
+  return {};
 }
 
 /*
