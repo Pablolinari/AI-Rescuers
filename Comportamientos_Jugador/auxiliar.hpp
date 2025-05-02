@@ -29,12 +29,29 @@ struct EstadoA {
     return f == st.f && c == st.c && brujula == st.brujula &&
            zapatillas == st.zapatillas;
   }
+	EstadoA& operator=(const EstadoA&st){
+		if(this!=&st){
+			c=st.c;
+			f=st.f;
+			zapatillas=st.zapatillas;
+			brujula=st.brujula;
+		}
+		return *this;
+	}
 };
 struct NodoA {
   EstadoA estado;
-  list<Action> secuencia;
+  vector<Action> secuencia;
 	int coste ;
   bool operator==(const NodoA &nodo) const { return estado == nodo.estado; }
+	NodoA& operator=(const NodoA&nodo){
+		if(this!=&nodo){
+			estado =nodo.estado;
+			secuencia=nodo.secuencia;
+			coste=nodo.coste;
+		}
+		return *this;
+	}
 };
 
 class ComportamientoAuxiliar : public Comportamiento {
@@ -55,14 +72,14 @@ public:
   ComportamientoAuxiliar(std::vector<std::vector<unsigned char>> mapaR,
                          std::vector<std::vector<unsigned char>> mapaC)
       : Comportamiento(mapaR, mapaC) {
-    // Inicializar Variables de Estado Niveles 2,3
+ 
+		this->hayPlan=false;
+		this->zapatillas=false;
+		this->plan={};   // Inicializar Variables de Estado Niveles 2,3
   }
   ComportamientoAuxiliar(const ComportamientoAuxiliar &comport)
       : Comportamiento(comport) {
 
-		this->hayPlan=false;
-		this->zapatillas=false;
-		this->plan={};
 	}
   ~ComportamientoAuxiliar() {}
 
@@ -80,9 +97,9 @@ public:
   int SectorInteresanteA(int posf, int posc);
   int CasillainteresanteA(Sensores sensores);
   int CasillainteresanteA1(Sensores sensores);
-	void VisualizaPlan(const EstadoA &st,const list<Action>&plan);
-	void PintaPlan(const list<Action>&plan , bool zap);
-	list<Action> AestrellaA(const EstadoA & inicio,const EstadoA& final,const vector<vector<unsigned char>>&terreno,const vector<vector<unsigned char>>&altura);
+	void VisualizaPlan(const EstadoA &st,const vector<Action>&plan);
+	void PintaPlan(const vector<Action>&plan , bool zap);
+	vector<Action> AestrellaA(const EstadoA & inicio,const EstadoA& final,const vector<vector<unsigned char>>&terreno,const vector<vector<unsigned char>>&altura);
 
 
 private:
@@ -92,7 +109,7 @@ private:
   int giroizq;
   int giro180;
   std::vector<std::vector<int>> memoria;
-  list<Action> plan;
+  vector<Action> plan;
   bool hayPlan;
 	bool extrawalk;
 	bool extraturni;

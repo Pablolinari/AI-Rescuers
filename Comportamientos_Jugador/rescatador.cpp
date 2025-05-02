@@ -1011,7 +1011,7 @@ int CalcularCoste(Action accion, const EstadoR &actual, const EstadoR &destino,
                   const vector<vector<unsigned char>> &terreno,
                   const vector<vector<unsigned char>> &altura) {
   int coste = 0;
-  int diferencia = altura[destino.f][destino.c]-altura[actual.f][actual.c];
+  int diferencia = altura[destino.f][destino.c] - altura[actual.f][actual.c];
   int signo;
   if (diferencia == 0) {
     signo = 0;
@@ -1061,7 +1061,6 @@ int CalcularCoste(Action accion, const EstadoR &actual, const EstadoR &destino,
   return coste;
 }
 
-
 list<Action> ComportamientoRescatador::DijkstraRescatadornew(
     const EstadoR &inicio, const EstadoR &final,
     const vector<vector<unsigned char>> &terreno,
@@ -1084,13 +1083,12 @@ list<Action> ComportamientoRescatador::DijkstraRescatadornew(
   NodoR actual;
   actual.estado = inicio;
   actual.coste = 0;
-  frontier.push(actual);
   mejor_coste[actual.estado] = 0;
   if (terreno[actual.estado.f][actual.estado.c] == 'D') {
     actual.estado.zapatillas = true;
   }
-
   frontier.push(actual);
+
   while (!frontier.empty()) {
     // Extraemos el nodo con menor coste
     actual = frontier.top();
@@ -1101,23 +1099,17 @@ list<Action> ComportamientoRescatador::DijkstraRescatadornew(
       return actual.secuencia;
     }
 
-  if (terreno[actual.estado.f][actual.estado.c] == 'D') {
-    actual.estado.zapatillas = true;
-  }
     // Si estamos en una casilla con zapatillas, actualizamos el estado
 
     // Generamos los nodos hijos para cada acción posible
     for (const auto &accion : genera_acciones) {
-      NodoR hijo;
-      hijo.secuencia = actual.secuencia;
-      hijo.coste = actual.coste;
-      hijo.estado = actual.estado;
+      NodoR hijo = actual;
       hijo.estado = applyR(accion, actual.estado, terreno, altura);
       if (terreno[hijo.estado.f][hijo.estado.c] == 'D') {
         hijo.estado.zapatillas = true;
       }
       // Calculamos el coste de la acción
-      double coste_accion =
+      int coste_accion =
           CalcularCoste(accion, actual.estado, hijo.estado, terreno, altura);
       hijo.coste = actual.coste + coste_accion;
 
@@ -1143,6 +1135,10 @@ ComportamientoRescatador::ComportamientoRescatadorNivel_2(Sensores sensores) {
     inicio.f = sensores.posF;
     inicio.c = sensores.posC;
     inicio.brujula = sensores.rumbo;
+
+    if (mapaResultado[inicio.f][inicio.c] == 'D') {
+      zapatillas = true;
+    }
     inicio.zapatillas = zapatillas;
     fin.f = sensores.destinoF;
     fin.c = sensores.destinoC;

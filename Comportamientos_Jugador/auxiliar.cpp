@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
+#include <ios>
 #include <iostream>
 #include <map>
 #include <queue>
@@ -767,16 +768,6 @@ list<Action> CrearPlan(Sensores sensores) {}
 Action
 ComportamientoAuxiliar::ComportamientoAuxiliarNivel_2(Sensores sensores) {
   Action action = IDLE;
-  if (!hayPlan) {
-    hayPlan = true;
-  }
-  if (hayPlan && plan.size() > 0) {
-    action = plan.front();
-    plan.pop_front();
-  }
-  if (plan.size() == 0) {
-    hayPlan = false;
-  }
   return action;
 }
 
@@ -793,7 +784,7 @@ void AnularMatrizA(vector<vector<unsigned char>> &m) {
 }
 
 void ComportamientoAuxiliar::VisualizaPlan(const EstadoA &st,
-                                           const list<Action> &plan) {
+                                           const vector<Action> &plan) {
   AnularMatrizA(mapaConPlan);
   EstadoA cst = st;
   auto it = plan.begin();
@@ -873,15 +864,19 @@ EstadoA NextCasillaA(const EstadoA &st) {
   return siguiente;
 }
 bool CasillaAccesibleA(const EstadoA &st,
-                              const vector<vector<unsigned char>> &terreno,
-                              const vector<vector<unsigned char>> &altura) {
+                       const vector<vector<unsigned char>> &terreno,
+                       const vector<vector<unsigned char>> &altura) {
   EstadoA next = NextCasillaA(st);
   bool check1 = false, check2 = false, check3 = false;
   check1 = terreno[next.f][next.c] != 'P' and terreno[next.f][next.c] != 'M';
-  check2 = terreno[next.f][next.c] != 'B' or
-           (terreno[next.f][next.c] == 'B' and st.zapatillas);
-  check3 = abs(altura[next.f][next.c] - altura[st.f][st.c]) <= 1;
-  return check1 and check2 and check3;
+
+  check2 = abs(altura[next.f][next.c] - altura[st.f][st.c]) <= 1;
+  check3 = check1 && terreno[next.f][next.c] != 'B';
+  if (st.zapatillas) {
+    return (check2 && check1);
+  } else {
+    return (check3 && check2);
+  }
 }
 EstadoA applyA(Action accion, const EstadoA &st,
                const vector<vector<unsigned char>> &terreno,
@@ -899,7 +894,7 @@ EstadoA applyA(Action accion, const EstadoA &st,
   }
   return next;
 }
-void ComportamientoAuxiliar::PintaPlan(const list<Action> &plan, bool zap) {
+void ComportamientoAuxiliar::PintaPlan(const vector<Action> &plan, bool zap) {
   auto it = plan.begin();
   while (it != plan.end()) {
     if (*it == WALK) {
@@ -930,7 +925,7 @@ int CalcularCosteA(Action accion, const EstadoA &actual, const EstadoA &destino,
                    const vector<vector<unsigned char>> &terreno,
                    const vector<vector<unsigned char>> &altura) {
   int coste = 0;
-  int diferencia = altura[destino.f][destino.c] - altura[actual.f][destino.c];
+  int diferencia = altura[destino.f][destino.c] - altura[actual.f][actual.c];
   int signo;
   if (diferencia == 0) {
     signo = 0;
@@ -967,7 +962,7 @@ int HeuristicaAestrella(const EstadoA &a, const EstadoA &b) {
   return std::max(abs(a.f - b.f), abs(a.c - b.c));
 }
 
-list<Action> ComportamientoAuxiliar::AestrellaA(
+vector<Action> ComportamientoAuxiliar::AestrellaA(
     const EstadoA &inicio, const EstadoA &final,
     const vector<vector<unsigned char>> &terreno,
     const vector<vector<unsigned char>> &altura) {
@@ -992,12 +987,15 @@ list<Action> ComportamientoAuxiliar::AestrellaA(
   NodoA actual;
   actual.estado = inicio;
   actual.coste = 0;
-  frontier.push(actual);
+  actual.secuencia = {};
   mejor_coste[actual.estado] = 0;
+
   if (terreno[actual.estado.f][actual.estado.c] == 'D') {
     actual.estado.zapatillas = true;
   }
-
+	if (actual.estado.f == final.f && actual.estado.c == final.c ) {
+      return actual.secuencia;
+  }
   frontier.push(actual);
   while (!frontier.empty()) {
     // Extraemos el nodo con menor coste
@@ -1005,30 +1003,30 @@ list<Action> ComportamientoAuxiliar::AestrellaA(
     frontier.pop();
 
     // Si llegamos al estado final, devolvemos la secuencia de acciones
-    if (actual.estado.f == final.f && actual.estado.c == final.c) {
+    if (actual.estado.f == final.f && actual.estado.c == final.c ) {
       return actual.secuencia;
-    }
-
-    if (terreno[actual.estado.f][actual.estado.c] == 'D') {
-      actual.estado.zapatillas = true;
     }
 
     // Generamos los nodos hijos para cada acción posible
     for (const auto &accion : genera_acciones) {
-      NodoA hijo;
-      hijo.secuencia = actual.secuencia;
-      hijo.coste = actual.coste;
-      hijo.estado = actual.estado;
+      NodoA hijo = actual;
       hijo.estado = applyA(accion, actual.estado, terreno, altura);
       if (terreno[hijo.estado.f][hijo.estado.c] == 'D') {
         hijo.estado.zapatillas = true;
       }
+			/*
+      if (hijo.estado == actual.estado) {
+        continue;
+      }
+		*/
       // Calculamos el coste de la acción
-      double coste_accion =
+
+		int coste_accion =
           CalcularCosteA(accion, actual.estado, hijo.estado, terreno, altura);
       hijo.coste = actual.coste + coste_accion;
 
       // Si encontramos un camino más barato al estado hijo, lo procesamos
+
       auto it = mejor_coste.find(hijo.estado);
       if (it == mejor_coste.end() || it->second > hijo.coste) {
         mejor_coste[hijo.estado] = hijo.coste;
@@ -1038,71 +1036,9 @@ list<Action> ComportamientoAuxiliar::AestrellaA(
     }
   }
 
-  // Si no se encuentra solución, devolvemos una lista vacía
   return {};
 }
 
-/*
-list<Action> ComportamientoAuxiliar::AestrellaA(
-    const EstadoA &inicio, const EstadoA &final,
-    const vector<vector<unsigned char>> &terreno,
-    const vector<vector<unsigned char>> &altura) {
-
-  struct ComparadorCoste {
-    EstadoA final;
-
-    ComparadorCoste(EstadoA final) : final(final) {}
-
-    bool operator()(const NodoA &a, const NodoA &b) const {
-      return a.coste + HeuristicaAestrella(a.estado, final) >
-             b.coste + HeuristicaAestrella(b.estado, final);
-    }
-  };
-  priority_queue<NodoA, std::vector<NodoA>, ComparadorCoste> frontier(
-      (ComparadorCoste(final)));
-
-  map<EstadoA, int> explorados;
-  NodoA inicial;
-  inicial.estado = inicio;
-  inicial.coste = 0;
-  frontier.push(inicial);
-  explorados[inicio] = 0;
-
-
-  while (!frontier.empty()) {
-
-    // Selecciono el nodo no explorado con menor coste
-
-    NodoA actual = frontier.top();
-    frontier.pop();
-    explorados[actual.estado] = actual.coste;
-
-    if (actual.estado.f == final.f && actual.estado.c == final.c) {
-      return actual.secuencia;
-    }
-
-    if (terreno[actual.estado.f][actual.estado.c] == 'D')
-      actual.estado.zapatillas = true;
-
-    for (int i = 0; i < genera_acciones.size(); i++) {
-      NodoA hijo = actual;
-      hijo.estado = applyA(genera_acciones[i], actual.estado, terreno, altura);
-      int coste_accion = CalcularCosteA(genera_acciones[i], actual.estado,
-                                        hijo.estado, terreno, altura);
-      hijo.coste = hijo.coste + coste_accion;
-      hijo.secuencia.push_back(genera_acciones[i]);
-
-      if (explorados.find(hijo.estado) == explorados.end() ||
-          (hijo.coste < explorados[hijo.estado])) {
-        explorados[hijo.estado] = hijo.coste;
-        frontier.push(hijo);
-      }
-    }
-  }
-
-  return {};
-}
-*/
 Action
 ComportamientoAuxiliar::ComportamientoAuxiliarNivel_3(Sensores sensores) {
   Action accion = IDLE;
@@ -1112,7 +1048,10 @@ ComportamientoAuxiliar::ComportamientoAuxiliarNivel_3(Sensores sensores) {
     inicio.f = sensores.posF;
     inicio.c = sensores.posC;
     inicio.brujula = sensores.rumbo;
-    inicio.zapatillas = zapatillas;
+		if(mapaResultado[inicio.f][inicio.c] == 'D'){
+			zapatillas =true;
+		}
+    inicio.zapatillas = this->zapatillas;
     fin.f = sensores.destinoF;
     fin.c = sensores.destinoC;
     plan = AestrellaA(inicio, fin, mapaResultado, mapaCotas);
@@ -1120,8 +1059,9 @@ ComportamientoAuxiliar::ComportamientoAuxiliarNivel_3(Sensores sensores) {
     hayPlan = plan.size() != 0;
   }
   if (hayPlan and plan.size() > 0) {
+		cout<<boolalpha<<this->zapatillas<< "tiene zapas "<< endl ;
     accion = plan.front();
-    plan.pop_front();
+    plan.erase(plan.begin());
   }
   if (plan.size() == 0) {
     hayPlan = false;
