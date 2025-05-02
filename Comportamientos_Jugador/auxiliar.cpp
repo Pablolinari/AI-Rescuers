@@ -993,8 +993,8 @@ vector<Action> ComportamientoAuxiliar::AestrellaA(
   if (terreno[actual.estado.f][actual.estado.c] == 'D') {
     actual.estado.zapatillas = true;
   }
-	if (actual.estado.f == final.f && actual.estado.c == final.c ) {
-      return actual.secuencia;
+  if (actual.estado.f == final.f && actual.estado.c == final.c) {
+    return actual.secuencia;
   }
   frontier.push(actual);
   while (!frontier.empty()) {
@@ -1003,7 +1003,7 @@ vector<Action> ComportamientoAuxiliar::AestrellaA(
     frontier.pop();
 
     // Si llegamos al estado final, devolvemos la secuencia de acciones
-    if (actual.estado.f == final.f && actual.estado.c == final.c ) {
+    if (actual.estado.f == final.f && actual.estado.c == final.c) {
       return actual.secuencia;
     }
 
@@ -1014,14 +1014,14 @@ vector<Action> ComportamientoAuxiliar::AestrellaA(
       if (terreno[hijo.estado.f][hijo.estado.c] == 'D') {
         hijo.estado.zapatillas = true;
       }
-			/*
-      if (hijo.estado == actual.estado) {
-        continue;
-      }
-		*/
+      /*
+if (hijo.estado == actual.estado) {
+continue;
+}
+*/
       // Calculamos el coste de la acción
 
-		int coste_accion =
+      int coste_accion =
           CalcularCosteA(accion, actual.estado, hijo.estado, terreno, altura);
       hijo.coste = actual.coste + coste_accion;
 
@@ -1048,9 +1048,9 @@ ComportamientoAuxiliar::ComportamientoAuxiliarNivel_3(Sensores sensores) {
     inicio.f = sensores.posF;
     inicio.c = sensores.posC;
     inicio.brujula = sensores.rumbo;
-		if(mapaResultado[inicio.f][inicio.c] == 'D'){
-			zapatillas =true;
-		}
+    if (mapaResultado[inicio.f][inicio.c] == 'D') {
+      zapatillas = true;
+    }
     inicio.zapatillas = this->zapatillas;
     fin.f = sensores.destinoF;
     fin.c = sensores.destinoC;
@@ -1059,7 +1059,7 @@ ComportamientoAuxiliar::ComportamientoAuxiliarNivel_3(Sensores sensores) {
     hayPlan = plan.size() != 0;
   }
   if (hayPlan and plan.size() > 0) {
-		cout<<boolalpha<<this->zapatillas<< "tiene zapas "<< endl ;
+    cout << boolalpha << this->zapatillas << "tiene zapas " << endl;
     accion = plan.front();
     plan.erase(plan.begin());
   }
