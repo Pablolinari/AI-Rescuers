@@ -649,7 +649,9 @@ bool actuacionNPC(unsigned int entidad, unsigned char celda, Action accion, unsi
         pair<int, int> casilla = monitor.getMapa()->NCasillasDelante(entidad, 2);
         if (monitor.getMapa()->QuienEnCasilla(casilla.first, casilla.second) == -1 and
             monitor.getMapa()->getCelda(casilla.first, casilla.second) != 'M' and
-            monitor.getMapa()->getCelda(casilla.first, casilla.second) != 'P')
+            monitor.getMapa()->getCelda(casilla.first, casilla.second) != 'P' and
+            (monitor.getMapa()->getCelda(casilla.first, casilla.second) != 'B')
+          )
           if (aleatorio(1) == 0)
           { // Solo ocurre la mitad de las veces que el vandalo lo intenta.
             std::cout << "\tEl empujón ha sido efectivo\n";
