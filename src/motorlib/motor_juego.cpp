@@ -32,7 +32,7 @@ bool actuacionRescatador(unsigned char celdaJ_inicial, unsigned char celdaJ_fin,
   switch (accion)
   {
   case WALK:
-    if (monitor.getMapa()->casillaOcupada(0) == -1 and (abs(difAltJ) <= 1) or (monitor.get_entidad(0)->Has_Zapatillas() and (abs(difAltJ) <= 2))) // Casilla destino desocupada        monitor.get_entidad(0)->seAostio();
+    if (monitor.getMapa()->casillaOcupada(0) == -1 and ((abs(difAltJ) <= 1) or (monitor.get_entidad(0)->Has_Zapatillas() and (abs(difAltJ) <= 2)))) // Casilla destino desocupada        monitor.get_entidad(0)->seAostio();
     {
       switch (celdaJ_fin)
       {
@@ -206,7 +206,7 @@ bool actuacionRescatador(unsigned char celdaJ_inicial, unsigned char celdaJ_fin,
         break;
       }
     }
-    else if (posibleElAvance == 0 and (abs(difAltJ) <= 1) or (monitor.get_entidad(0)->Has_Zapatillas() and (abs(difAltJ) <= 2)))
+    else if (posibleElAvance == 0 and ((abs(difAltJ) <= 1) or (monitor.get_entidad(0)->Has_Zapatillas() and (abs(difAltJ) <= 2))))
     { // Es posible correr
       switch (celdaJ_fin)
       {
