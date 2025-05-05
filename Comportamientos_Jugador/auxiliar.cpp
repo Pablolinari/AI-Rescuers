@@ -1073,4 +1073,6 @@ ComportamientoAuxiliar::ComportamientoAuxiliarNivel_3(Sensores sensores) {
 /// codigo para el nivel 4 ////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 Action
-ComportamientoAuxiliar::ComportamientoAuxiliarNivel_4(Sensores sensores) {}
+ComportamientoAuxiliar::ComportamientoAuxiliarNivel_4(Sensores sensores) {
+
+}

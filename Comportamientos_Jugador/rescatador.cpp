@@ -1126,6 +1126,7 @@ list<Action> ComportamientoRescatador::DijkstraRescatadornew(
   // Si no se encuentra solución, devolvemos una lista vacía
   return {};
 }
+
 Action
 ComportamientoRescatador::ComportamientoRescatadorNivel_2(Sensores sensores) {
   Action accion = IDLE;
@@ -1155,19 +1156,119 @@ ComportamientoRescatador::ComportamientoRescatadorNivel_2(Sensores sensores) {
   }
   return accion;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-/// codigo para el nivel 3
-/// ////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////
-
-Action
-ComportamientoRescatador::ComportamientoRescatadorNivel_3(Sensores sensores) {}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// codigo para el nivel 4
 /// ////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 
 Action
-ComportamientoRescatador::ComportamientoRescatadorNivel_4(Sensores sensores) {}
+ComportamientoRescatador::ComportamientoRescatadorNivel_4(Sensores sensores) {
+  SituarSensorEnMapaR(mapaResultado, mapaCotas, sensores);
+  Action accion = IDLE;
+  if (!hayPlan) {
+    // Invocar al método de búsqueda
+    EstadoR inicio, fin;
+    inicio.f = sensores.posF;
+    inicio.c = sensores.posC;
+    inicio.brujula = sensores.rumbo;
+
+    if (mapaResultado[inicio.f][inicio.c] == 'D') {
+      zapatillas = true;
+    }
+    inicio.zapatillas = zapatillas;
+    fin.f = sensores.destinoF;
+    fin.c = sensores.destinoC;
+    plan = DijkstraRescatadornew(inicio, fin, mapaResultado, mapaCotas);
+    VisualizaPlan(inicio, plan);
+    hayPlan = plan.size() != 0;
+  }
+  if (hayPlan and plan.size() > 0) {
+    accion = plan.front();
+    plan.pop_front();
+  }
+  if (plan.size() == 0 || sensores.choque) {
+    hayPlan = false;
+    if (sensores.superficie[0] == 'D')
+      zapatillas = true;
+
+    if (giroizq != 0) {
+      accion = TURN_SR;
+      giroizq--;
+
+    } else if (extrawalk) {
+      accion = WALK;
+      extrawalk = false;
+    } else if (extraturnd) {
+      accion = TURN_SR;
+      extraturnd = false;
+    } else if (extraturni) {
+      accion = TURN_L;
+      giroizq = 1;
+      extraturni = false;
+    } else {
+      int pos = CasillainteresanteR1(sensores);
+
+      switch (pos) {
+      case 2:
+        accion = WALK;
+        break;
+      case 1:
+        giroizq = 1;
+        accion = TURN_L;
+        break;
+      case 3:
+        accion = TURN_SR;
+        break;
+      case 4:
+        extrawalk = true;
+        accion = TURN_L;
+        giroizq = 1;
+        break;
+      case 5:
+        if (camino_opcional == 2) {
+          accion = WALK;
+        } else if (camino_opcional == 1) {
+          extrawalk = true;
+          accion = TURN_L;
+          giroizq = 1;
+        }
+
+      case 6:
+        if (camino_opcional == 2) {
+          accion = WALK;
+        } else if (camino_opcional == 1) {
+          extrawalk = true;
+          extraturnd = true;
+          accion = TURN_L;
+          giroizq = 1;
+        } else if (camino_opcional == 3) {
+          accion = TURN_SR;
+          extrawalk = true;
+          extraturni = true;
+        }
+        break;
+      case 7:
+        if (camino_opcional == 2) {
+          accion = WALK;
+        } else if (camino_opcional == 3) {
+          extrawalk = true;
+          accion = TURN_SR;
+        }
+        break;
+      case 8:
+        accion = TURN_SR;
+        extrawalk = true;
+        break;
+
+      case 0:
+        accion = TURN_SR;
+        break;
+      }
+
+      if (pos != 0)
+        memoria[sensores.posF][sensores.posC]++;
+    }
+    next_action = accion;
+  }
+  return accion;
+}
