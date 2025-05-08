@@ -335,7 +335,7 @@ int ComportamientoAuxiliar::MenosPisadaA(Sensores sensores) {
   int min_visitas = INFINITY;
   int pos = -1;
   int indice_rumbo = sensores.rumbo;
-  vector<int> orden = {1, 0, 2, 3, 4, 5, 6, 7,8,9,10,11,12,13,14};
+  vector<int> orden = {1, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
   vector<pair<bool, int>> transitable(15, {false, 0});
   camino_opcional = 0;
 
@@ -415,7 +415,7 @@ int ComportamientoAuxiliar::MenosPisadaA(Sensores sensores) {
 
       for (int opt : numopcion)
         if (transitable[opt].first && memoria[posf][posc] < min_visitas) {
-          pos = opt+1;
+          pos = opt + 1;
           camino_opcional = transitable[opt].second;
         }
     }
@@ -546,8 +546,8 @@ ComportamientoAuxiliar::ComportamientoAuxiliarNivel_0(Sensores sensores) {
       action = TURN_SR;
       break;
     }
-    // if (pos != 0)
-    memoria[sensores.posF][sensores.posC]++;
+    if (pos != 0)
+      memoria[sensores.posF][sensores.posC]++;
   }
 
   last_action = action;
