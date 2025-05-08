@@ -416,10 +416,12 @@ int ComportamientoAuxiliar::MenosPisadaA(Sensores sensores) {
       for (int opt : numopcion)
         if (transitable[opt].first && memoria[posf][posc] < min_visitas) {
           pos = opt + 1;
+          min_visitas = memoria[posf][posc];
           camino_opcional = transitable[opt].second;
         }
     }
   }
+  cout << pos << endl;
   return pos;
 }
 /*
@@ -1131,5 +1133,122 @@ ComportamientoAuxiliar::ComportamientoAuxiliarNivel_3(Sensores sensores) {
 ////////////////////////////////////////////////////////////////////////////////
 /// codigo para el nivel 4 ////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
+int CalcularCosteA4(Action accion, const EstadoA &actual, const EstadoA &destino,
+                   const vector<vector<unsigned char>> &terreno,
+                   const vector<vector<unsigned char>> &altura) {
+  int coste = 0;
+  int diferencia = altura[destino.f][destino.c] - altura[actual.f][actual.c];
+  int signo;
+  if (diferencia == 0) {
+    signo = 0;
+  } else if (diferencia < 0) {
+    signo = -1;
+  } else if (diferencia > 0) {
+    signo = 1;
+  }
+
+  if (accion == WALK) {
+
+    if (terreno[actual.f][actual.c] == 'S')
+      coste = 2 + (1 * signo);
+    else if (terreno[actual.f][actual.c] == 'T')
+      coste = 20 + (5 * signo);
+    else if (terreno[actual.f][actual.c] == 'A')
+      coste = 100 + (10 * signo);
+		else if(terreno[actual.f][actual.c]=='?')
+				coste = 5 ;
+    else
+      coste = 1;
+  } else if (accion == TURN_SR) {
+    if (terreno[actual.f][actual.c] == 'S')
+      coste = 1;
+    else if (terreno[actual.f][actual.c] == 'T')
+      coste = 3;
+    else if (terreno[actual.f][actual.c] == 'A')
+      coste = 16;
+    else
+      coste = 1;
+  }
+  return coste;
+}
+
+vector<Action> ComportamientoAuxiliar::AestrellaA4(
+    const EstadoA &inicio, const EstadoA &final,
+    const vector<vector<unsigned char>> &terreno,
+    const vector<vector<unsigned char>> &altura) {
+
+  struct ComparadorCoste {
+    EstadoA final;
+
+    ComparadorCoste(EstadoA final) : final(final) {}
+
+    bool operator()(const NodoA &a, const NodoA &b) const {
+      return a.coste + HeuristicaAestrella(a.estado, final) >
+             b.coste + HeuristicaAestrella(b.estado, final);
+    }
+  };
+  priority_queue<NodoA, std::vector<NodoA>, ComparadorCoste> frontier(
+      (ComparadorCoste(final)));
+
+  // Mapa para registrar el menor coste encontrado para cada estado
+  map<EstadoA, int> mejor_coste;
+
+  // Nodo inicial
+  NodoA actual;
+  actual.estado = inicio;
+  actual.coste = 0;
+  actual.secuencia = {};
+  mejor_coste[actual.estado] = 0;
+
+  if (terreno[actual.estado.f][actual.estado.c] == 'D') {
+    actual.estado.zapatillas = true;
+  }
+  if (actual.estado.f == final.f && actual.estado.c == final.c) {
+    return actual.secuencia;
+  }
+  frontier.push(actual);
+  while (!frontier.empty()) {
+    // Extraemos el nodo con menor coste
+    actual = frontier.top();
+    frontier.pop();
+
+    // Si llegamos al estado final, devolvemos la secuencia de acciones
+    if (actual.estado.f == final.f && actual.estado.c == final.c) {
+      return actual.secuencia;
+    }
+
+    // Generamos los nodos hijos para cada acción posible
+    for (const auto &accion : genera_acciones) {
+      NodoA hijo = actual;
+      hijo.estado = applyA(accion, actual.estado, terreno, altura);
+      if (terreno[hijo.estado.f][hijo.estado.c] == 'D') {
+        hijo.estado.zapatillas = true;
+      }
+      /*
+if (hijo.estado == actual.estado) {
+continue;
+}
+*/
+      // Calculamos el coste de la acción
+
+      int coste_accion =
+          CalcularCosteA4(accion, actual.estado, hijo.estado, terreno, altura);
+      hijo.coste = actual.coste + coste_accion;
+
+      // Si encontramos un camino más barato al estado hijo, lo procesamos
+
+      auto it = mejor_coste.find(hijo.estado);
+      if (it == mejor_coste.end() || it->second > hijo.coste) {
+        mejor_coste[hijo.estado] = hijo.coste;
+        hijo.secuencia.push_back(accion);
+        frontier.push(hijo);
+      }
+    }
+  }
+
+  return {};
+}
+
+
 Action
 ComportamientoAuxiliar::ComportamientoAuxiliarNivel_4(Sensores sensores) {}
