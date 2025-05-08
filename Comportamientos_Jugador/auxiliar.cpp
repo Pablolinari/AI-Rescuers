@@ -196,41 +196,8 @@ void SituarSensorEnMapaA(vector<vector<unsigned char>> &m,
  */
 bool ViablePorAlturaA(int dif) { return abs(dif) <= 1; }
 
-/*
- * Busca la casilla menos pisada entre las
- * tres primeras opciones del rango de vision
- */
-/*
-int ComportamientoAuxiliar::MenosPisadaA(Sensores sensores) {
-  int min_visitas = INFINITY;
-  int pos = -1;
-  int indice_rumbo = sensores.rumbo;
-  vector<int> orden = {1, 0, 2, 5, 4, 6, 3, 7,1};
-  for (int i : orden) {
-    int posf = sensores.posF + posiciones_vision[indice_rumbo][i].first;
-    int posc = sensores.posC + posiciones_vision[indice_rumbo][i].second;
-    if (i <= 2) {
-      if (memoria[posf][posc] < min_visitas &&
-          (sensores.superficie[i + 1] == 'C' ||
-           sensores.superficie[i + 1] == 'D') &&
-          sensores.agentes[i + 1] == '_' &&
-          ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[0])) {
-        pos = i + 1;
-        min_visitas = memoria[posf][posc];
-      }
-    } else {
-      if (memoria[posf][posc] < min_visitas &&(sensores.superficie[i + 1] == 'C'
-|| sensores.superficie[i + 1] == 'D')) { pos = i + 1; min_visitas =
-memoria[posf][posc];
-      }
-    }
-  }
-  return pos;
-}
-*/
-
 bool CasillaValida0A(char a) { return a == 'C' || a == 'D'; }
-
+/*
 int ComportamientoAuxiliar::MenosPisadaA(Sensores sensores) {
   int min_visitas = INFINITY;
   int pos = -1;
@@ -362,7 +329,99 @@ int ComportamientoAuxiliar::MenosPisadaA(Sensores sensores) {
   }
   return pos;
 }
+*/
 
+int ComportamientoAuxiliar::MenosPisadaA(Sensores sensores) {
+  int min_visitas = INFINITY;
+  int pos = -1;
+  int indice_rumbo = sensores.rumbo;
+  vector<int> orden = {1, 0, 2, 3, 4, 5, 6, 7,8,9,10,11,12,13,14};
+  vector<pair<bool, int>> transitable(15, {false, 0});
+  camino_opcional = 0;
+
+  for (int i : orden) {
+    int posf = sensores.posF + posiciones_vision[indice_rumbo][i].first;
+    int posc = sensores.posC + posiciones_vision[indice_rumbo][i].second;
+    if (i <= 2) {
+      if (memoria[posf][posc] < min_visitas &&
+          CasillaValida0A(sensores.superficie[i + 1]) &&
+          ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[0]) &&
+          sensores.agentes[i + 1] == '_') {
+        pos = i + 1;
+        min_visitas = memoria[posf][posc];
+        transitable[i].first = true;
+      }
+    } else if (i <= 8) {
+      vector<pair<int, int>> intermedios;
+      switch (i) {
+      case 3:
+        intermedios = {{1, 0}};
+        break;
+      case 4:
+        intermedios = {{2, 2}, {1, 1}};
+        break;
+      case 5:
+        intermedios = {{2, 2}, {1, 1}, {3, 3}};
+        break;
+      case 6:
+        intermedios = {{2, 2}, {3, 3}};
+        break;
+      case 7:
+        intermedios = {{3, 0}};
+        break;
+      default:
+        continue;
+      }
+      for (const auto &[inter, camino] : intermedios) {
+        if (memoria[posf][posc] < min_visitas &&
+            CasillaValida0A(sensores.superficie[i + 1]) &&
+            CasillaValida0A(sensores.superficie[inter]) &&
+            ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[0]) &&
+            ViablePorAlturaA(sensores.cota[inter] - sensores.cota[0]) &&
+            sensores.agentes[inter] == '_' && sensores.agentes[i + 1] == '_') {
+          min_visitas = memoria[posf][posc];
+          pos = i + 1;
+          camino_opcional = camino;
+          transitable[i].first = true;
+          transitable[i].second = camino;
+        }
+      }
+    } else {
+      vector<int> numopcion;
+
+      switch (i) {
+      case 8:
+        numopcion = {3};
+        break;
+      case 9:
+        numopcion = {3, 4};
+        break;
+      case 10:
+        numopcion = {3, 4, 5};
+        break;
+      case 11:
+        numopcion = {4, 5, 6};
+        break;
+      case 12:
+        numopcion = {5, 6, 7};
+        break;
+      case 13:
+        numopcion = {6, 7};
+        break;
+      case 14:
+        numopcion = {7};
+        break;
+      }
+
+      for (int opt : numopcion)
+        if (transitable[opt].first && memoria[posf][posc] < min_visitas) {
+          pos = opt+1;
+          camino_opcional = transitable[opt].second;
+        }
+    }
+  }
+  return pos;
+}
 /*
  * funcion que determina que casilla debe tomar como interesante
  * el agente , posteriormente se movera n esa direccion
@@ -1073,6 +1132,4 @@ ComportamientoAuxiliar::ComportamientoAuxiliarNivel_3(Sensores sensores) {
 /// codigo para el nivel 4 ////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 Action
-ComportamientoAuxiliar::ComportamientoAuxiliarNivel_4(Sensores sensores) {
-
-}
+ComportamientoAuxiliar::ComportamientoAuxiliarNivel_4(Sensores sensores) {}
