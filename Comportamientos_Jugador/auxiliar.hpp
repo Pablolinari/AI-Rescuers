@@ -92,6 +92,7 @@ public:
   Action ComportamientoAuxiliarNivel_2(Sensores sensores);
   Action ComportamientoAuxiliarNivel_3(Sensores sensores);
   Action ComportamientoAuxiliarNivel_4(Sensores sensores);
+	int Calculalado(Sensores sensores);
   int MenosPisadaA(Sensores sensores);
   int MenosPisadaA1(Sensores sensores);
   int SectorInteresanteA(int posf, int posc);

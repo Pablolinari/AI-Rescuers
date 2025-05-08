@@ -331,6 +331,23 @@ int ComportamientoAuxiliar::MenosPisadaA(Sensores sensores) {
 }
 */
 
+int ComportamientoAuxiliar::Calculalado(Sensores sensores) {
+  int posf = sensores.posF;
+  int posc = sensores.posC;
+  int total1 = 0;
+  int total2 = 0;
+  for (int i = 0; i < posc; i++) {
+    for (int j = 0; j < memoria.size()) {
+      total1 += memoria[j][i];
+    }
+  }
+  for (int i = 0; i < posc; i++) {
+    for (int j = 0; j < memoria.size()) {
+      total1 += memoria[j][i];
+    }
+  }
+}
+
 int ComportamientoAuxiliar::MenosPisadaA(Sensores sensores) {
   int min_visitas = INFINITY;
   int pos = -1;
@@ -1133,9 +1150,10 @@ ComportamientoAuxiliar::ComportamientoAuxiliarNivel_3(Sensores sensores) {
 ////////////////////////////////////////////////////////////////////////////////
 /// codigo para el nivel 4 ////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
-int CalcularCosteA4(Action accion, const EstadoA &actual, const EstadoA &destino,
-                   const vector<vector<unsigned char>> &terreno,
-                   const vector<vector<unsigned char>> &altura) {
+int CalcularCosteA4(Action accion, const EstadoA &actual,
+                    const EstadoA &destino,
+                    const vector<vector<unsigned char>> &terreno,
+                    const vector<vector<unsigned char>> &altura) {
   int coste = 0;
   int diferencia = altura[destino.f][destino.c] - altura[actual.f][actual.c];
   int signo;
@@ -1155,8 +1173,8 @@ int CalcularCosteA4(Action accion, const EstadoA &actual, const EstadoA &destino
       coste = 20 + (5 * signo);
     else if (terreno[actual.f][actual.c] == 'A')
       coste = 100 + (10 * signo);
-		else if(terreno[actual.f][actual.c]=='?')
-				coste = 5 ;
+    else if (terreno[actual.f][actual.c] == '?')
+      coste = 5;
     else
       coste = 1;
   } else if (accion == TURN_SR) {
@@ -1248,7 +1266,6 @@ continue;
 
   return {};
 }
-
 
 Action
 ComportamientoAuxiliar::ComportamientoAuxiliarNivel_4(Sensores sensores) {}
