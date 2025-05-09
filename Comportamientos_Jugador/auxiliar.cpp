@@ -7,6 +7,7 @@
 #include <ios>
 #include <iostream>
 #include <map>
+#include <set>
 #include <queue>
 #include <random>
 #include <vector>
@@ -331,20 +332,35 @@ int ComportamientoAuxiliar::MenosPisadaA(Sensores sensores) {
 }
 */
 
-int ComportamientoAuxiliar::Calculalado(Sensores sensores) {
-  int posf = sensores.posF;
-  int posc = sensores.posC;
+int ComportamientoAuxiliar::Calculalado(int posc,int brujula) {
   int total1 = 0;
   int total2 = 0;
   for (int i = 0; i < posc; i++) {
-    for (int j = 0; j < memoria.size()) {
+    for (int j = 0; j < memoria.size(); j++) {
       total1 += memoria[j][i];
     }
   }
-  for (int i = 0; i < posc; i++) {
-    for (int j = 0; j < memoria.size()) {
-      total1 += memoria[j][i];
+  for (int i = posc; i < memoria.size(); i++) {
+    for (int j = 0; j < memoria.size(); j++) {
+      total2 += memoria[j][i];
     }
+  }
+	bool abajo = brujula>=3 && brujula <=5;
+  if (total2 < total1) {
+		if(abajo){
+			return 1 ;
+		}
+		else{
+			return 2;
+		}
+    
+  } else {
+		if(abajo){
+			return 2;
+		}
+		else {
+    	return 1;
+		}
   }
 }
 
@@ -381,7 +397,7 @@ int ComportamientoAuxiliar::MenosPisadaA(Sensores sensores) {
         intermedios = {{2, 2}, {1, 1}, {3, 3}};
         break;
       case 6:
-        intermedios = {{2, 2}, {3, 3}};
+        intermedios = {{1,1},{2, 2}, {3, 3}};
         break;
       case 7:
         intermedios = {{3, 0}};
@@ -430,12 +446,13 @@ int ComportamientoAuxiliar::MenosPisadaA(Sensores sensores) {
         break;
       }
 
-      for (int opt : numopcion)
+      for (int opt : numopcion) {
         if (transitable[opt].first && memoria[posf][posc] < min_visitas) {
           pos = opt + 1;
           min_visitas = memoria[posf][posc];
           camino_opcional = transitable[opt].second;
         }
+      }
     }
   }
   cout << pos << endl;
@@ -536,6 +553,7 @@ ComportamientoAuxiliar::ComportamientoAuxiliarNivel_0(Sensores sensores) {
     case 6:
       if (camino_opcional == 2) {
         action = WALK;
+				extrawalk=true;
       } else if (camino_opcional == 1) {
         extrawalk = true;
         extraturnd = true;
@@ -562,7 +580,16 @@ ComportamientoAuxiliar::ComportamientoAuxiliarNivel_0(Sensores sensores) {
       break;
 
     case 0:
-      action = TURN_SR;
+				/*
+      int lado = Calculalado(sensores.posC,sensores.rumbo);
+      if (lado == 2)
+        action = TURN_SR;
+      else {
+        action = TURN_SR;
+				giroizq=6;
+      }
+			*/
+			action=TURN_SR;
       break;
     }
     if (pos != 0)

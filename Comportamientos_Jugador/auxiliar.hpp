@@ -92,7 +92,7 @@ public:
   Action ComportamientoAuxiliarNivel_2(Sensores sensores);
   Action ComportamientoAuxiliarNivel_3(Sensores sensores);
   Action ComportamientoAuxiliarNivel_4(Sensores sensores);
-	int Calculalado(Sensores sensores);
+	int Calculalado(int posc,int brujula);
   int MenosPisadaA(Sensores sensores);
   int MenosPisadaA1(Sensores sensores);
   int SectorInteresanteA(int posf, int posc);
@@ -102,6 +102,7 @@ public:
 	void PintaPlan(const vector<Action>&plan , bool zap);
 	vector<Action> AestrellaA(const EstadoA & inicio,const EstadoA& final,const vector<vector<unsigned char>>&terreno,const vector<vector<unsigned char>>&altura);
 
+	vector<Action> AestrellaA4(const EstadoA & inicio,const EstadoA& final,const vector<vector<unsigned char>>&terreno,const vector<vector<unsigned char>>&altura);
 
 private:
   // Definir Variables de Estado
