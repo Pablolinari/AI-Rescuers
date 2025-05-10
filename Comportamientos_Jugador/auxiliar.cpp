@@ -7,11 +7,18 @@
 #include <ios>
 #include <iostream>
 #include <map>
-#include <set>
 #include <queue>
 #include <random>
+#include <set>
 #include <vector>
+double get_random_0_1() {
+  // Establecer una semilla fija (por ejemplo, 42)
+  static std::mt19937 gen(42); // Mersenne Twister con semilla fija
+  static std::uniform_real_distribution<double> dis(
+      0.0, 1.0); // Distribución uniforme en [0, 1)
 
+  return dis(gen); // Generar número aleatorio
+}
 const vector<Action> genera_acciones = {WALK, TURN_SR};
 const vector<vector<pair<int, int>>> posiciones_vision = {
     // Norte (rumbo = 0)
@@ -198,7 +205,7 @@ void SituarSensorEnMapaA(vector<vector<unsigned char>> &m,
 bool ViablePorAlturaA(int dif) { return abs(dif) <= 1; }
 
 bool CasillaValida0A(char a) { return a == 'C' || a == 'D'; }
-/*
+
 int ComportamientoAuxiliar::MenosPisadaA(Sensores sensores) {
   int min_visitas = INFINITY;
   int pos = -1;
@@ -217,240 +224,39 @@ int ComportamientoAuxiliar::MenosPisadaA(Sensores sensores) {
         min_visitas = memoria[posf][posc];
       }
     } else {
+      vector<int> caminos;
       switch (i) {
       case 3:
-        if (memoria[posf][posc] < min_visitas &&
-            CasillaValida0A(sensores.superficie[i + 1]) &&
-            CasillaValida0A(sensores.superficie[1]) &&
-            ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[0]) &&
-            ViablePorAlturaA(sensores.cota[1] - sensores.cota[0]) &&
-
-            sensores.agentes[1] == '_' && sensores.agentes[i + 1] == '_') {
-          min_visitas = memoria[posf][posc];
-          pos = i + 1;
-          camino_opcional = 0;
-        }
+        caminos = {1};
         break;
       case 4:
-
-        if (memoria[posf][posc] < min_visitas &&
-            CasillaValida0A(sensores.superficie[i + 1]) &&
-            CasillaValida0A(sensores.superficie[2]) &&
-            ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[0]) &&
-            ViablePorAlturaA(sensores.cota[2] - sensores.cota[0]) &&
-            sensores.agentes[2] == '_' && sensores.agentes[i + 1] == '_') {
-          min_visitas = memoria[posf][posc];
-          pos = i + 1;
-          camino_opcional = 2;
-        } else if (memoria[posf][posc] < min_visitas &&
-                   CasillaValida0A(sensores.superficie[i + 1]) &&
-                   CasillaValida0A(sensores.superficie[1]) &&
-                   ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[0]) &&
-                   ViablePorAlturaA(sensores.cota[1] - sensores.cota[0]) &&
-                   sensores.agentes[1] == '_' &&
-                   sensores.agentes[i + 1] == '_') {
-          min_visitas = memoria[posf][posc];
-          pos = i + 1;
-          camino_opcional = 1;
-        }
-
+        caminos = {2, 1};
         break;
       case 5:
-        if (memoria[posf][posc] < min_visitas &&
-            CasillaValida0A(sensores.superficie[i + 1]) &&
-            CasillaValida0A(sensores.superficie[2]) &&
-            ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[0]) &&
-            ViablePorAlturaA(sensores.cota[2] - sensores.cota[0]) &&
-            sensores.agentes[2] == '_' && sensores.agentes[i + 1] == '_') {
-          min_visitas = memoria[posf][posc];
-          pos = i + 1;
-          camino_opcional = 2;
-        } else if (memoria[posf][posc] < min_visitas &&
-                   CasillaValida0A(sensores.superficie[i + 1]) &&
-                   CasillaValida0A(sensores.superficie[1]) &&
-                   ViablePorAlturaA(sensores.cota[1] - sensores.cota[0]) &&
-                   ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[0]) &&
-                   sensores.agentes[1] == '_' &&
-                   sensores.agentes[i + 1] == '_') {
-          min_visitas = memoria[posf][posc];
-          pos = i + 1;
-          camino_opcional = 1;
-        } else if (memoria[posf][posc] < min_visitas &&
-                   CasillaValida0A(sensores.superficie[i + 1]) &&
-                   CasillaValida0A(sensores.superficie[3]) &&
-                   ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[0]) &&
-                   ViablePorAlturaA(sensores.cota[3] - sensores.cota[0]) &&
-                   sensores.agentes[3] == '_' &&
-                   sensores.agentes[i + 1] == '_') {
-          min_visitas = memoria[posf][posc];
-          pos = i + 1;
-          camino_opcional = 3;
-        }
+        if (sensores.rumbo % 2 == 0)
+          caminos = {2, 1, 3};
+        else
+          caminos = {2};
         break;
       case 6:
-
-        if (memoria[posf][posc] < min_visitas &&
-            CasillaValida0A(sensores.superficie[i + 1]) &&
-            CasillaValida0A(sensores.superficie[2]) &&
-            ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[0]) &&
-            ViablePorAlturaA(sensores.cota[2] - sensores.cota[0]) &&
-            sensores.agentes[2] == '_' && sensores.agentes[i + 1] == '_') {
-          min_visitas = memoria[posf][posc];
-          pos = i + 1;
-          camino_opcional = 2;
-        } else if (memoria[posf][posc] < min_visitas &&
-                   CasillaValida0A(sensores.superficie[i + 1]) &&
-                   CasillaValida0A(sensores.superficie[3]) &&
-                   ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[0]) &&
-                   ViablePorAlturaA(sensores.cota[3] - sensores.cota[0]) &&
-                   sensores.agentes[3] == '_' &&
-                   sensores.agentes[i + 1] == '_') {
-          min_visitas = memoria[posf][posc];
-          pos = i + 1;
-          camino_opcional = 3;
-        }
+        caminos = {2, 3};
         break;
       case 7:
+        caminos = {3};
+        break;
+      }
+      for (int cam : caminos) {
+
         if (memoria[posf][posc] < min_visitas &&
             CasillaValida0A(sensores.superficie[i + 1]) &&
-            CasillaValida0A(sensores.superficie[3]) &&
-            ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[0]) &&
-            ViablePorAlturaA(sensores.cota[3] - sensores.cota[0]) &&
-            sensores.agentes[3] == '_' && sensores.agentes[i + 1] == '_') {
+            CasillaValida0A(sensores.superficie[cam]) &&
+            ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[cam]) &&
+            ViablePorAlturaA(sensores.cota[cam] - sensores.cota[0]) &&
+            sensores.agentes[cam] == '_' && sensores.agentes[i + 1] == '_') {
           min_visitas = memoria[posf][posc];
           pos = i + 1;
-          camino_opcional = 0;
-        }
 
-        break;
-      case 8:
-        break;
-      }
-    }
-  }
-  return pos;
-}
-*/
-
-int ComportamientoAuxiliar::Calculalado(int posc,int brujula) {
-  int total1 = 0;
-  int total2 = 0;
-  for (int i = 0; i < posc; i++) {
-    for (int j = 0; j < memoria.size(); j++) {
-      total1 += memoria[j][i];
-    }
-  }
-  for (int i = posc; i < memoria.size(); i++) {
-    for (int j = 0; j < memoria.size(); j++) {
-      total2 += memoria[j][i];
-    }
-  }
-	bool abajo = brujula>=3 && brujula <=5;
-  if (total2 < total1) {
-		if(abajo){
-			return 1 ;
-		}
-		else{
-			return 2;
-		}
-    
-  } else {
-		if(abajo){
-			return 2;
-		}
-		else {
-    	return 1;
-		}
-  }
-}
-
-int ComportamientoAuxiliar::MenosPisadaA(Sensores sensores) {
-  int min_visitas = INFINITY;
-  int pos = -1;
-  int indice_rumbo = sensores.rumbo;
-  vector<int> orden = {1, 0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
-  vector<pair<bool, int>> transitable(15, {false, 0});
-  camino_opcional = 0;
-
-  for (int i : orden) {
-    int posf = sensores.posF + posiciones_vision[indice_rumbo][i].first;
-    int posc = sensores.posC + posiciones_vision[indice_rumbo][i].second;
-    if (i <= 2) {
-      if (memoria[posf][posc] < min_visitas &&
-          CasillaValida0A(sensores.superficie[i + 1]) &&
-          ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[0]) &&
-          sensores.agentes[i + 1] == '_') {
-        pos = i + 1;
-        min_visitas = memoria[posf][posc];
-        transitable[i].first = true;
-      }
-    } else if (i <= 8) {
-      vector<pair<int, int>> intermedios;
-      switch (i) {
-      case 3:
-        intermedios = {{1, 0}};
-        break;
-      case 4:
-        intermedios = {{2, 2}, {1, 1}};
-        break;
-      case 5:
-        intermedios = {{2, 2}, {1, 1}, {3, 3}};
-        break;
-      case 6:
-        intermedios = {{1,1},{2, 2}, {3, 3}};
-        break;
-      case 7:
-        intermedios = {{3, 0}};
-        break;
-      default:
-        continue;
-      }
-      for (const auto &[inter, camino] : intermedios) {
-        if (memoria[posf][posc] < min_visitas &&
-            CasillaValida0A(sensores.superficie[i + 1]) &&
-            CasillaValida0A(sensores.superficie[inter]) &&
-            ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[0]) &&
-            ViablePorAlturaA(sensores.cota[inter] - sensores.cota[0]) &&
-            sensores.agentes[inter] == '_' && sensores.agentes[i + 1] == '_') {
-          min_visitas = memoria[posf][posc];
-          pos = i + 1;
-          camino_opcional = camino;
-          transitable[i].first = true;
-          transitable[i].second = camino;
-        }
-      }
-    } else {
-      vector<int> numopcion;
-
-      switch (i) {
-      case 8:
-        numopcion = {3};
-        break;
-      case 9:
-        numopcion = {3, 4};
-        break;
-      case 10:
-        numopcion = {3, 4, 5};
-        break;
-      case 11:
-        numopcion = {4, 5, 6};
-        break;
-      case 12:
-        numopcion = {5, 6, 7};
-        break;
-      case 13:
-        numopcion = {6, 7};
-        break;
-      case 14:
-        numopcion = {7};
-        break;
-      }
-
-      for (int opt : numopcion) {
-        if (transitable[opt].first && memoria[posf][posc] < min_visitas) {
-          pos = opt + 1;
-          min_visitas = memoria[posf][posc];
-          camino_opcional = transitable[opt].second;
+          camino_opcional = cam;
         }
       }
     }
@@ -458,6 +264,29 @@ int ComportamientoAuxiliar::MenosPisadaA(Sensores sensores) {
   cout << pos << endl;
   return pos;
 }
+
+int ComportamientoAuxiliar::Calculalado(int posc, int brujula) {
+  int total1 = 0;
+  int total2 = 0;
+  for (int i = 0; i < posc; i++) {
+    for (int j = 0; j < memoria.size(); j++) {
+      total1 += memoria[j][i]; // izquierda
+    }
+  }
+  for (int i = posc; i < memoria.size(); i++) {
+    for (int j = 0; j < memoria.size(); j++) {
+      total2 += memoria[j][i]; // derecha
+    }
+  }
+  bool abajo = brujula >= 3 && brujula <= 5;
+  if (total2 < total1) {
+    return 2;
+
+  } else {
+    return 1;
+  }
+}
+
 /*
  * funcion que determina que casilla debe tomar como interesante
  * el agente , posteriormente se movera n esa direccion
@@ -513,6 +342,205 @@ ComportamientoAuxiliar::ComportamientoAuxiliarNivel_0(Sensores sensores) {
     action = TURN_SR;
     giroizq--;
   } else if (extrawalk) {
+    memoria[sensores.posF][sensores.posC]++;
+    action = WALK;
+    extrawalk = false;
+  } else if (extraturnd) {
+    memoria[sensores.posF][sensores.posC]++;
+    action = TURN_SR;
+    extraturnd = false;
+  } else if (extraturni) {
+    memoria[sensores.posF][sensores.posC]++;
+    action = TURN_SR;
+    giroizq = 6;
+    extraturni = false;
+  } else {
+
+    int pos = CasillainteresanteA(sensores);
+    switch (pos) {
+    case 2:
+      action = WALK;
+      break;
+    case 1:
+      giroizq = 6;
+      action = TURN_SR;
+      break;
+    case 3:
+      action = TURN_SR;
+      break;
+    case 4:
+      extrawalk = true;
+      action = TURN_SR;
+      giroizq = 6;
+      break;
+    case 5:
+      if (camino_opcional == 2) {
+        action = WALK;
+      } else if (camino_opcional == 1) {
+        extrawalk = true;
+        action = TURN_SR;
+        extraturnd = true;
+        giroizq = 6;
+      }
+
+    case 6:
+      if (camino_opcional == 2) {
+        action = WALK;
+      } else if (camino_opcional == 1) {
+        extrawalk = true;
+        extraturnd = true;
+        action = TURN_SR;
+        giroizq = 6;
+      } else if (camino_opcional == 3) {
+        action = TURN_SR;
+        extrawalk = true;
+        extraturni = true;
+      }
+      break;
+    case 7:
+      if (camino_opcional == 2) {
+        action = WALK;
+      } else if (camino_opcional == 3) {
+        extraturni = true;
+        extrawalk = true;
+        action = TURN_SR;
+      }
+      break;
+    case 8:
+      action = TURN_SR;
+      extrawalk = true;
+      break;
+
+    case 0:
+
+      if (get_random_0_1() < 0.7)
+        action = TURN_SR;
+      else {
+        action = TURN_SR;
+        giroizq = 6;
+      }
+      break;
+    }
+    memoria[sensores.posF][sensores.posC]++;
+  }
+
+  last_action = action;
+
+  return action;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// codigo para el nivel 1 ////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+/*
+ * Busca la casilla menos pisada entre las
+ * tres primeras opciones del rango de vision
+ */
+bool CasillaValida1A(char a) {
+  return a == 'C' || a == 'D' || a == 'S' || a == 'X';
+}
+int ComportamientoAuxiliar::MenosPisadaA1(Sensores sensores) {
+  int min_visitas = INFINITY;
+  int pos = -1;
+  int indice_rumbo = sensores.rumbo;
+  vector<int> orden = {1, 0, 2, 3, 4, 5, 6, 7};
+  camino_opcional = 0;
+  for (int i : orden) {
+    int posf = sensores.posF + posiciones_vision[indice_rumbo][i].first;
+    int posc = sensores.posC + posiciones_vision[indice_rumbo][i].second;
+    if (i <= 2) {
+      if (memoria[posf][posc] < min_visitas &&
+          CasillaValida1A(sensores.superficie[i + 1]) &&
+          ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[0]) &&
+          sensores.agentes[i + 1] == '_') {
+        pos = i + 1;
+        min_visitas = memoria[posf][posc];
+      }
+    } else {
+      vector<int> caminos;
+      switch (i) {
+      case 3:
+        caminos = {1};
+        break;
+      case 4:
+        caminos = {2, 1};
+        break;
+      case 5:
+        if (sensores.rumbo % 2 == 0)
+          caminos = {2, 1, 3};
+        else
+          caminos = {2};
+        break;
+      case 6:
+        caminos = {2, 3};
+        break;
+      case 7:
+        caminos = {3};
+        break;
+      }
+      for (int cam : caminos) {
+
+        if (memoria[posf][posc] < min_visitas &&
+            CasillaValida1A(sensores.superficie[i + 1]) &&
+            CasillaValida1A(sensores.superficie[cam]) &&
+            ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[cam]) &&
+            ViablePorAlturaA(sensores.cota[cam] - sensores.cota[0]) &&
+            sensores.agentes[cam] == '_' && sensores.agentes[i + 1] == '_') {
+          min_visitas = memoria[posf][posc];
+          pos = i + 1;
+
+          camino_opcional = cam;
+        }
+      }
+    }
+  }
+  cout << pos << endl;
+  return pos;
+}
+
+/*
+ * funcion casilla interesante para el nivel 1
+ */
+
+int ComportamientoAuxiliar::CasillainteresanteA1(Sensores sensores) {
+  // Calculo si son viables por altura las posibles casillas
+  bool i = ViablePorAlturaA(sensores.cota[1] - sensores.cota[0]);
+
+  bool c = ViablePorAlturaA(sensores.cota[2] - sensores.cota[0]);
+
+  bool d = ViablePorAlturaA(sensores.cota[3] - sensores.cota[0]);
+
+  // compruebo los distintos casos segun superficie y altura , si no puedo
+  // actuar devuelvo 0
+
+  if (!zapatillas) {
+    if (sensores.superficie[2] == 'D' && c && sensores.agentes[2] == '_')
+      return 2;
+    else if (sensores.superficie[1] == 'D' && i && sensores.agentes[1] == '_')
+      return 1;
+    else if (sensores.superficie[3] == 'D' && d && sensores.agentes[3] == '_')
+      return 3;
+  }
+  // Calculo la casilla menos pisada de las 3 que veo delante
+  int menospisada = MenosPisadaA1(sensores);
+  if (menospisada == -1) { // si no encuentro una casilla camino menos pisada
+    return 0;
+  } else {
+    return menospisada;
+  }
+}
+Action
+ComportamientoAuxiliar::ComportamientoAuxiliarNivel_1(Sensores sensores) {
+  Action action;
+  SituarSensorEnMapaA(mapaResultado, mapaCotas, sensores);
+
+  if (sensores.superficie[0] == 'D')
+    zapatillas = true;
+
+  if (giroizq != 0) {
+    action = TURN_SR;
+    giroizq--;
+  } else if (extrawalk) {
     action = WALK;
     extrawalk = false;
   } else if (extraturnd) {
@@ -547,279 +575,7 @@ ComportamientoAuxiliar::ComportamientoAuxiliarNivel_0(Sensores sensores) {
       } else if (camino_opcional == 1) {
         extrawalk = true;
         action = TURN_SR;
-        giroizq = 6;
-      }
-
-    case 6:
-      if (camino_opcional == 2) {
-        action = WALK;
-				extrawalk=true;
-      } else if (camino_opcional == 1) {
-        extrawalk = true;
         extraturnd = true;
-        action = TURN_SR;
-        giroizq = 6;
-      } else if (camino_opcional == 3) {
-        action = TURN_SR;
-        extrawalk = true;
-        extraturni = true;
-      }
-      break;
-    case 7:
-      if (camino_opcional == 2) {
-        action = WALK;
-      } else if (camino_opcional == 3) {
-
-        extrawalk = true;
-        action = TURN_SR;
-      }
-      break;
-    case 8:
-      action = TURN_SR;
-      extrawalk = true;
-      break;
-
-    case 0:
-				/*
-      int lado = Calculalado(sensores.posC,sensores.rumbo);
-      if (lado == 2)
-        action = TURN_SR;
-      else {
-        action = TURN_SR;
-				giroizq=6;
-      }
-			*/
-			action=TURN_SR;
-      break;
-    }
-    if (pos != 0)
-      memoria[sensores.posF][sensores.posC]++;
-  }
-
-  last_action = action;
-
-  return action;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// codigo para el nivel 1 ////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////////////////
-/*
- * Busca la casilla menos pisada entre las
- * tres primeras opciones del rango de vision
- */
-bool CasillaValida1A(char a) {
-  return a == 'C' || a == 'D' || a == 'S' || a == 'X';
-}
-
-int ComportamientoAuxiliar::MenosPisadaA1(Sensores sensores) {
-  int min_visitas = INFINITY;
-  int pos = -1;
-  int indice_rumbo = sensores.rumbo;
-  vector<int> orden = {1, 0, 2, 3, 4, 5, 6, 7};
-  camino_opcional = 0;
-  for (int i : orden) {
-    int posf = sensores.posF + posiciones_vision[indice_rumbo][i].first;
-    int posc = sensores.posC + posiciones_vision[indice_rumbo][i].second;
-    if (i <= 2) {
-      if (memoria[posf][posc] < min_visitas &&
-          CasillaValida1A(sensores.superficie[i + 1]) &&
-          ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[0]) &&
-          sensores.agentes[i + 1] == '_') {
-        pos = i + 1;
-        min_visitas = memoria[posf][posc];
-      }
-    } else {
-      switch (i) {
-      case 3:
-        if (memoria[posf][posc] < min_visitas &&
-            CasillaValida1A(sensores.superficie[i + 1]) &&
-            CasillaValida1A(sensores.superficie[1]) &&
-            ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[0]) &&
-            ViablePorAlturaA(sensores.cota[1] - sensores.cota[0]) &&
-
-            sensores.agentes[1] == '_' && sensores.agentes[i + 1] == '_') {
-          min_visitas = memoria[posf][posc];
-          pos = i + 1;
-          camino_opcional = 0;
-        }
-        break;
-      case 4:
-
-        if (memoria[posf][posc] < min_visitas &&
-            CasillaValida1A(sensores.superficie[i + 1]) &&
-            CasillaValida1A(sensores.superficie[2]) &&
-            ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[0]) &&
-            ViablePorAlturaA(sensores.cota[2] - sensores.cota[0]) &&
-            sensores.agentes[2] == '_' && sensores.agentes[i + 1] == '_') {
-          min_visitas = memoria[posf][posc];
-          pos = i + 1;
-          camino_opcional = 2;
-        } else if (memoria[posf][posc] < min_visitas &&
-                   CasillaValida1A(sensores.superficie[i + 1]) &&
-                   CasillaValida1A(sensores.superficie[1]) &&
-                   ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[0]) &&
-                   ViablePorAlturaA(sensores.cota[1] - sensores.cota[0]) &&
-                   sensores.agentes[1] == '_' &&
-                   sensores.agentes[i + 1] == '_') {
-          min_visitas = memoria[posf][posc];
-          pos = i + 1;
-          camino_opcional = 1;
-        }
-
-        break;
-      case 5:
-        if (memoria[posf][posc] < min_visitas &&
-            CasillaValida1A(sensores.superficie[i + 1]) &&
-            CasillaValida1A(sensores.superficie[2]) &&
-            ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[0]) &&
-            ViablePorAlturaA(sensores.cota[2] - sensores.cota[0]) &&
-            sensores.agentes[2] == '_' && sensores.agentes[i + 1] == '_') {
-          min_visitas = memoria[posf][posc];
-          pos = i + 1;
-          camino_opcional = 2;
-        } else if (memoria[posf][posc] < min_visitas &&
-                   CasillaValida1A(sensores.superficie[i + 1]) &&
-                   CasillaValida1A(sensores.superficie[1]) &&
-                   ViablePorAlturaA(sensores.cota[1] - sensores.cota[0]) &&
-                   ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[0]) &&
-                   sensores.agentes[1] == '_' &&
-                   sensores.agentes[i + 1] == '_') {
-          min_visitas = memoria[posf][posc];
-          pos = i + 1;
-          camino_opcional = 1;
-        } else if (memoria[posf][posc] < min_visitas &&
-                   CasillaValida1A(sensores.superficie[i + 1]) &&
-                   CasillaValida1A(sensores.superficie[3]) &&
-                   ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[0]) &&
-                   ViablePorAlturaA(sensores.cota[3] - sensores.cota[0]) &&
-                   sensores.agentes[3] == '_' &&
-                   sensores.agentes[i + 1] == '_') {
-          min_visitas = memoria[posf][posc];
-          pos = i + 1;
-          camino_opcional = 3;
-        }
-        break;
-      case 6:
-
-        if (memoria[posf][posc] < min_visitas &&
-            CasillaValida1A(sensores.superficie[i + 1]) &&
-            CasillaValida1A(sensores.superficie[2]) &&
-            ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[0]) &&
-            ViablePorAlturaA(sensores.cota[2] - sensores.cota[0]) &&
-            sensores.agentes[2] == '_' && sensores.agentes[i + 1] == '_') {
-          min_visitas = memoria[posf][posc];
-          pos = i + 1;
-          camino_opcional = 2;
-        } else if (memoria[posf][posc] < min_visitas &&
-                   CasillaValida1A(sensores.superficie[i + 1]) &&
-                   CasillaValida1A(sensores.superficie[3]) &&
-                   ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[0]) &&
-                   ViablePorAlturaA(sensores.cota[3] - sensores.cota[0]) &&
-                   sensores.agentes[3] == '_' &&
-                   sensores.agentes[i + 1] == '_') {
-          min_visitas = memoria[posf][posc];
-          pos = i + 1;
-          camino_opcional = 3;
-        }
-        break;
-      case 7:
-        if (memoria[posf][posc] < min_visitas &&
-            CasillaValida1A(sensores.superficie[i + 1]) &&
-            CasillaValida1A(sensores.superficie[3]) &&
-            ViablePorAlturaA(sensores.cota[i + 1] - sensores.cota[0]) &&
-            ViablePorAlturaA(sensores.cota[3] - sensores.cota[0]) &&
-            sensores.agentes[3] == '_' && sensores.agentes[i + 1] == '_') {
-          min_visitas = memoria[posf][posc];
-          pos = i + 1;
-          camino_opcional = 0;
-        }
-
-        break;
-      case 8:
-        break;
-      }
-    }
-  }
-  return pos;
-}
-/*
- * funcion casilla interesante para el nivel 1
- */
-
-int ComportamientoAuxiliar::CasillainteresanteA1(Sensores sensores) {
-  // Calculo si son viables por altura las posibles casillas
-  bool i = ViablePorAlturaA(sensores.cota[1] - sensores.cota[0]);
-
-  bool c = ViablePorAlturaA(sensores.cota[2] - sensores.cota[0]);
-
-  bool d = ViablePorAlturaA(sensores.cota[3] - sensores.cota[0]);
-
-  // compruebo los distintos casos segun superficie y altura , si no puedo
-  // actuar devuelvo 0
-
-  if (!zapatillas) {
-    if (sensores.superficie[2] == 'D' && c)
-      return 2;
-    else if (sensores.superficie[1] == 'D' && i)
-      return 1;
-    else if (sensores.superficie[3] == 'D' && d)
-      return 3;
-  }
-  // Calculo la casilla menos pisada de las 3 que veo delante
-  int menospisada = MenosPisadaA1(sensores);
-  if (menospisada == -1) { // si no encuentro una casilla camino menos pisada
-    return 0;
-  } else {
-    return menospisada;
-  }
-}
-Action
-ComportamientoAuxiliar::ComportamientoAuxiliarNivel_1(Sensores sensores) {
-  Action action;
-  SituarSensorEnMapaA(mapaResultado, mapaCotas, sensores);
-
-  if (sensores.superficie[0] == 'D')
-    zapatillas = true;
-
-  if (giroizq != 0) {
-    action = TURN_SR;
-    giroizq--;
-  } else if (extrawalk) {
-    action = WALK;
-    extrawalk = false;
-  } else if (extraturnd) {
-    action = TURN_SR;
-    extraturnd = false;
-  } else if (extraturni) {
-    action = TURN_SR;
-    giroizq = 6;
-    extraturni = false;
-  } else {
-
-    int pos = CasillainteresanteA1(sensores);
-    switch (pos) {
-    case 2:
-      action = WALK;
-      break;
-    case 1:
-      giroizq = 6;
-      action = TURN_SR;
-      break;
-    case 3:
-      action = TURN_SR;
-      break;
-    case 4:
-      extrawalk = true;
-      action = TURN_SR;
-      giroizq = 6;
-      break;
-    case 5:
-      if (camino_opcional == 2) {
-        action = WALK;
-      } else if (camino_opcional == 1) {
-        extrawalk = true;
-        action = TURN_SR;
         giroizq = 6;
       }
 
@@ -841,7 +597,7 @@ ComportamientoAuxiliar::ComportamientoAuxiliarNivel_1(Sensores sensores) {
       if (camino_opcional == 2) {
         action = WALK;
       } else if (camino_opcional == 3) {
-
+        extraturni = true;
         extrawalk = true;
         action = TURN_SR;
       }
@@ -850,7 +606,6 @@ ComportamientoAuxiliar::ComportamientoAuxiliarNivel_1(Sensores sensores) {
       action = TURN_SR;
       extrawalk = true;
       break;
-
     case 0:
       action = TURN_SR;
       break;
@@ -1295,4 +1050,6 @@ continue;
 }
 
 Action
-ComportamientoAuxiliar::ComportamientoAuxiliarNivel_4(Sensores sensores) {}
+ComportamientoAuxiliar::ComportamientoAuxiliarNivel_4(Sensores sensores) {
+  return IDLE;
+}

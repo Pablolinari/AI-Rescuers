@@ -60,7 +60,6 @@ public:
   ComportamientoAuxiliar(unsigned int size = 0) : Comportamiento(size) {
     // Inicializar Variables de Estado Niveles 0,1,4
     this->giroizq = 0;
-    this->giro180 = 0;
     this->zapatillas = false;
     this->last_action = IDLE;
 		this->camino_opcional=0;
