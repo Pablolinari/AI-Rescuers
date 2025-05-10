@@ -966,6 +966,8 @@ int CalcularCosteA4(Action accion, const EstadoA &actual,
       coste = 3;
     else if (terreno[actual.f][actual.c] == 'A')
       coste = 16;
+    else if (terreno[actual.f][actual.c] == '?')
+      coste = 5;
     else
       coste = 1;
   }

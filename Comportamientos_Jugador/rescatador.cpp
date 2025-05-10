@@ -646,7 +646,7 @@ void AnularMatrizR(vector<vector<unsigned char>> &m) {
 }
 
 void ComportamientoRescatador::VisualizaPlan(const EstadoR &st,
-                                             const list<Action> &plan) {
+                                             const vector<Action> &plan) {
   AnularMatrizR(mapaConPlan);
   EstadoR cst = st;
   auto it = plan.begin();
@@ -819,7 +819,7 @@ EstadoR applyR(Action accion, const EstadoR &st,
   return next;
 }
 
-void ComportamientoRescatador::PintaPlan(const list<Action> &plan, bool zap) {
+void ComportamientoRescatador::PintaPlan(const vector<Action> &plan, bool zap) {
   auto it = plan.begin();
   while (it != plan.end()) {
     if (*it == WALK) {
@@ -904,7 +904,7 @@ int CalcularCoste(Action accion, const EstadoR &actual, const EstadoR &destino,
   return coste;
 }
 
-list<Action> ComportamientoRescatador::DijkstraRescatadornew(
+vector<Action> ComportamientoRescatador::DijkstraRescatadornew(
     const EstadoR &inicio, const EstadoR &final,
     const vector<vector<unsigned char>> &terreno,
     const vector<vector<unsigned char>> &altura) {
@@ -992,7 +992,7 @@ ComportamientoRescatador::ComportamientoRescatadorNivel_2(Sensores sensores) {
   }
   if (hayPlan and plan.size() > 0) {
     accion = plan.front();
-    plan.pop_front();
+    plan.erase(plan.begin());
   }
   if (plan.size() == 0) {
     hayPlan = false;
@@ -1003,6 +1003,153 @@ ComportamientoRescatador::ComportamientoRescatadorNivel_2(Sensores sensores) {
 /// codigo para el nivel 4
 /// ////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
+int CalcularCosteR4(Action accion, const EstadoR &actual,
+                    const EstadoR &destino,
+                    const vector<vector<unsigned char>> &terreno,
+                    const vector<vector<unsigned char>> &altura) {
+  int coste = 0;
+  int diferencia = altura[destino.f][destino.c] - altura[actual.f][actual.c];
+  int signo;
+  if (diferencia == 0) {
+    signo = 0;
+  } else if (diferencia < 0) {
+    signo = -1;
+  } else if (diferencia > 0) {
+    signo = 1;
+  }
+  if (accion == WALK) {
+
+    if (terreno[actual.f][actual.c] == 'S')
+      coste = 2 + (1 * signo);
+    else if (terreno[actual.f][actual.c] == 'T')
+      coste = 20 + (5 * signo);
+    else if (terreno[actual.f][actual.c] == 'A')
+      coste = 100 + (10 * signo);
+    else if (terreno[actual.f][actual.c] == '?')
+      coste = 5;
+
+    else
+      coste = 1;
+  } else if (accion == TURN_SR) {
+    if (terreno[actual.f][actual.c] == 'S')
+      coste = 1;
+    else if (terreno[actual.f][actual.c] == 'T')
+      coste = 3;
+    else if (terreno[actual.f][actual.c] == 'A')
+      coste = 16;
+    else if (terreno[actual.f][actual.c] == '?')
+      coste = 5;
+
+    else
+      coste = 1;
+  } else if (accion == TURN_L) {
+    if (terreno[actual.f][actual.c] == 'S')
+      coste = 1;
+    else if (terreno[actual.f][actual.c] == 'T')
+      coste = 5;
+    else if (terreno[actual.f][actual.c] == 'A')
+      coste = 30;
+    else if (terreno[actual.f][actual.c] == '?')
+      coste = 5;
+
+    else
+      coste = 1;
+  } else if (accion == RUN) {
+    if (terreno[actual.f][actual.c] == 'S')
+      coste = 3 + (2 * signo);
+    else if (terreno[actual.f][actual.c] == 'T')
+      coste = 35 + (5 * signo);
+    else if (terreno[actual.f][actual.c] == 'A')
+      coste = 150 + (15 * signo);
+    else if (terreno[actual.f][actual.c] == '?')
+      coste = 8;
+
+    else
+      coste = 1;
+  }
+  return coste;
+}
+
+int HeuristicaAestrella(const EstadoR &a, const EstadoR &b) {
+  return std::max(abs(a.f - b.f), abs(a.c - b.c));
+}
+
+vector<Action> ComportamientoRescatador::AestrellaR4(
+    const EstadoR &inicio, const EstadoR &final,
+    const vector<vector<unsigned char>> &terreno,
+    const vector<vector<unsigned char>> &altura) {
+
+  struct ComparadorCoste {
+    EstadoR final;
+
+    ComparadorCoste(EstadoR final) : final(final) {}
+
+    bool operator()(const NodoR &a, const NodoR &b) const {
+      return a.coste + HeuristicaAestrella(a.estado, final) >
+             b.coste + HeuristicaAestrella(b.estado, final);
+    }
+  };
+  priority_queue<NodoR, std::vector<NodoR>, ComparadorCoste> frontier(
+      (ComparadorCoste(final)));
+
+  // Mapa para registrar el menor coste encontrado para cada estado
+  map<EstadoR, int> mejor_coste;
+
+  // Nodo inicial
+  NodoR actual;
+  actual.estado = inicio;
+  actual.coste = 0;
+  actual.secuencia = {};
+  mejor_coste[actual.estado] = 0;
+
+  if (terreno[actual.estado.f][actual.estado.c] == 'D') {
+    actual.estado.zapatillas = true;
+  }
+  if (actual.estado.f == final.f && actual.estado.c == final.c) {
+    return actual.secuencia;
+  }
+  frontier.push(actual);
+  while (!frontier.empty()) {
+    // Extraemos el nodo con menor coste
+    actual = frontier.top();
+    frontier.pop();
+
+    // Si llegamos al estado final, devolvemos la secuencia de acciones
+    if (actual.estado.f == final.f && actual.estado.c == final.c) {
+      return actual.secuencia;
+    }
+
+    // Generamos los nodos hijos para cada acción posible
+    for (const auto &accion : genera_acciones) {
+      NodoR hijo = actual;
+      hijo.estado = applyR(accion, actual.estado, terreno, altura);
+      if (terreno[hijo.estado.f][hijo.estado.c] == 'D') {
+        hijo.estado.zapatillas = true;
+      }
+      /*
+if (hijo.estado == actual.estado) {
+continue;
+}
+*/
+      // Calculamos el coste de la acción
+
+      int coste_accion =
+          CalcularCosteR4(accion, actual.estado, hijo.estado, terreno, altura);
+      hijo.coste = actual.coste + coste_accion;
+
+      // Si encontramos un camino más barato al estado hijo, lo procesamos
+
+      auto it = mejor_coste.find(hijo.estado);
+      if (it == mejor_coste.end() || it->second > hijo.coste) {
+        mejor_coste[hijo.estado] = hijo.coste;
+        hijo.secuencia.push_back(accion);
+        frontier.push(hijo);
+      }
+    }
+  }
+
+  return {};
+}
 
 Action
 ComportamientoRescatador::ComportamientoRescatadorNivel_4(Sensores sensores) {
@@ -1027,91 +1174,14 @@ ComportamientoRescatador::ComportamientoRescatadorNivel_4(Sensores sensores) {
   }
   if (hayPlan and plan.size() > 0) {
     accion = plan.front();
-    plan.pop_front();
+    plan.erase(plan.begin());
   }
   if (plan.size() == 0 || sensores.choque) {
     hayPlan = false;
     if (sensores.superficie[0] == 'D')
       zapatillas = true;
 
-    if (giroizq != 0) {
-      accion = TURN_SR;
-      giroizq--;
-
-    } else if (extrawalk) {
-      accion = WALK;
-      extrawalk = false;
-    } else if (extraturnd) {
-      accion = TURN_SR;
-      extraturnd = false;
-    } else if (extraturni) {
-      accion = TURN_L;
-      giroizq = 1;
-      extraturni = false;
-    } else {
-      int pos = CasillainteresanteR1(sensores);
-
-      switch (pos) {
-      case 2:
-        accion = WALK;
-        break;
-      case 1:
-        giroizq = 1;
-        accion = TURN_L;
-        break;
-      case 3:
-        accion = TURN_SR;
-        break;
-      case 4:
-        extrawalk = true;
-        accion = TURN_L;
-        giroizq = 1;
-        break;
-      case 5:
-        if (camino_opcional == 2) {
-          accion = WALK;
-        } else if (camino_opcional == 1) {
-          extrawalk = true;
-          accion = TURN_L;
-          giroizq = 1;
-        }
-
-      case 6:
-        if (camino_opcional == 2) {
-          accion = WALK;
-        } else if (camino_opcional == 1) {
-          extrawalk = true;
-          extraturnd = true;
-          accion = TURN_L;
-          giroizq = 1;
-        } else if (camino_opcional == 3) {
-          accion = TURN_SR;
-          extrawalk = true;
-          extraturni = true;
-        }
-        break;
-      case 7:
-        if (camino_opcional == 2) {
-          accion = WALK;
-        } else if (camino_opcional == 3) {
-          extrawalk = true;
-          accion = TURN_SR;
-        }
-        break;
-      case 8:
-        accion = TURN_SR;
-        extrawalk = true;
-        break;
-
-      case 0:
-        accion = TURN_SR;
-        break;
-      }
-
-      if (pos != 0)
-        memoria[sensores.posF][sensores.posC]++;
-    }
-    next_action = accion;
+    
   }
   return accion;
 }

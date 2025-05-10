@@ -44,7 +44,7 @@ struct EstadoR {
 };
 struct NodoR {
   EstadoR estado;
-  list<Action> secuencia;
+  vector<Action> secuencia;
   int coste;
   NodoR() {
     estado = EstadoR();
@@ -73,9 +73,9 @@ public:
     this->zapatillas = false;
     this->next_action = IDLE;
     this->camino_opcional = 0;
-		this->extraturnd=false;
-		this->extraturni=false;
-		this->extrawalk=false;
+    this->extraturnd = false;
+    this->extraturni = false;
+    this->extrawalk = false;
     this->memoria = vector<vector<int>>(128, vector<int>(128, 0));
   }
   ComportamientoRescatador(std::vector<std::vector<unsigned char>> mapaR,
@@ -102,15 +102,15 @@ public:
   int SectorInteresanteR(int posf, int posc);
   int CasillainteresanteR(Sensores sensores);
   int CasillainteresanteR1(Sensores sensores);
-  void VisualizaPlan(const EstadoR &st, const list<Action> &plan);
-  void PintaPlan(const list<Action> &plan, bool zap);
-  list<Action> DijkstraRescatador(const EstadoR &inicio, const EstadoR &final,
-                                  const vector<vector<unsigned char>> &terreno,
-                                  const vector<vector<unsigned char>> &altura);
-  list<Action>
+  void VisualizaPlan(const EstadoR &st, const vector<Action> &plan);
+  void PintaPlan(const vector<Action> &plan, bool zap);
+  vector<Action>
   DijkstraRescatadornew(const EstadoR &inicio, const EstadoR &final,
                         const vector<vector<unsigned char>> &terreno,
                         const vector<vector<unsigned char>> &altura);
+  vector<Action> AestrellaR4(const EstadoR &inicio, const EstadoR &final,
+                             const vector<vector<unsigned char>> &terreno,
+                             const vector<vector<unsigned char>> &altura);
 
 private:
   // Variables de Estado
@@ -120,11 +120,11 @@ private:
   bool zapatillas;
   int orientar;
   bool hayPlan;
-	bool extrawalk;
-	bool extraturni;
-	bool extraturnd;
+  bool extrawalk;
+  bool extraturni;
+  bool extraturnd;
   int camino_opcional;
-  list<Action> plan;
+  vector<Action> plan;
   std::vector<std::vector<int>> memoria;
 };
 
