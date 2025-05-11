@@ -167,10 +167,10 @@ Action ComportamientoAuxiliar::think(Sensores sensores) {
     accion = ComportamientoAuxiliarNivel_2(sensores);
     break;
   case 3:
-    //accion = ComportamientoAuxiliarNivel_3(sensores);
+    // accion = ComportamientoAuxiliarNivel_3(sensores);
     break;
   case 4:
-    accion = ComportamientoAuxiliarNivel_4 (sensores);
+    accion = ComportamientoAuxiliarNivel_4(sensores);
     break;
   }
 
@@ -931,6 +931,39 @@ ComportamientoAuxiliar::ComportamientoAuxiliarNivel_3(Sensores sensores) {
 ////////////////////////////////////////////////////////////////////////////////
 /// codigo para el nivel 4 ////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
+
+bool CasillaAccesibleA4(const EstadoA &st,
+                        const vector<vector<unsigned char>> &terreno,
+                        const vector<vector<unsigned char>> &altura) {
+  EstadoA next = NextCasillaA(st);
+  bool check1 = false, check2 = false, check3 = false;
+  check1 = terreno[next.f][next.c] != 'P' and terreno[next.f][next.c] != 'M';
+
+  check2 = abs(altura[next.f][next.c] - altura[st.f][st.c]) <= 1;
+  check3 = check1 && terreno[next.f][next.c] != 'B';
+  if (st.zapatillas) {
+    return (check1 and check2);
+  } else {
+    return (check3 and check2);
+  }
+}
+EstadoA applyA4(Action accion, const EstadoA &st,
+                const vector<vector<unsigned char>> &terreno,
+                const vector<vector<unsigned char>> &altura) {
+  EstadoA next = st;
+  switch (accion) {
+  case WALK:
+    if (CasillaAccesibleA4(st, terreno, altura)) {
+      next = NextCasillaA(st);
+    }
+    break;
+  case TURN_SR:
+    next.brujula = (next.brujula + 1) % 8;
+    break;
+  }
+  return next;
+}
+
 int CalcularCosteA4(Action accion, const EstadoA &actual,
                     const EstadoA &destino,
                     const vector<vector<unsigned char>> &terreno,
@@ -955,7 +988,7 @@ int CalcularCosteA4(Action accion, const EstadoA &actual,
     else if (terreno[actual.f][actual.c] == 'A')
       coste = 100 + (10 * signo);
     else if (terreno[actual.f][actual.c] == '?')
-      coste = 5;
+      coste = 2;
     else
       coste = 1;
   } else if (accion == TURN_SR) {
@@ -966,7 +999,7 @@ int CalcularCosteA4(Action accion, const EstadoA &actual,
     else if (terreno[actual.f][actual.c] == 'A')
       coste = 16;
     else if (terreno[actual.f][actual.c] == '?')
-      coste = 5;
+      coste = 2;
     else
       coste = 1;
   }
@@ -1021,7 +1054,7 @@ vector<Action> ComportamientoAuxiliar::AestrellaA4(
     // Generamos los nodos hijos para cada acción posible
     for (const auto &accion : genera_acciones) {
       NodoA hijo = actual;
-      hijo.estado = applyA(accion, actual.estado, terreno, altura);
+      hijo.estado = applyA4(accion, actual.estado, terreno, altura);
       if (terreno[hijo.estado.f][hijo.estado.c] == 'D') {
         hijo.estado.zapatillas = true;
       }
@@ -1060,7 +1093,9 @@ int LlegaAlRescate(Sensores sensores) {
 Action
 ComportamientoAuxiliar::ComportamientoAuxiliarNivel_4(Sensores sensores) {
   Action accion = IDLE;
-  if (sensores.destinoC != -1 && sensores.destinoF != -1) {
+
+  SituarSensorEnMapaA(mapaResultado, mapaCotas, sensores);
+  if (sensores.venpaca) {
     if (!hayPlan) {
       // Invocar al método de búsqueda
       EstadoA inicio, fin;
@@ -1073,7 +1108,7 @@ ComportamientoAuxiliar::ComportamientoAuxiliarNivel_4(Sensores sensores) {
       inicio.zapatillas = this->zapatillas;
       fin.f = sensores.destinoF;
       fin.c = sensores.destinoC;
-      plan = AestrellaA(inicio, fin, mapaResultado, mapaCotas);
+      plan = AestrellaA4(inicio, fin, mapaResultado, mapaCotas);
       VisualizaPlan(inicio, plan);
       hayPlan = plan.size() != 0;
     }
@@ -1081,6 +1116,14 @@ ComportamientoAuxiliar::ComportamientoAuxiliarNivel_4(Sensores sensores) {
       int orientacionrescate = LlegaAlRescate(sensores);
       if (orientacionrescate == -1) {
         accion = plan.front();
+        if (accion == WALK) {
+          if (ViablePorAlturaA(sensores.cota[0] - sensores.cota[2]))
+            plan.erase(plan.begin());
+          else {
+            accion = TURN_SR;
+            hayPlan = false;
+          }
+        }
         plan.erase(plan.begin());
       } else {
         if (orientacionrescate == sensores.rumbo) {

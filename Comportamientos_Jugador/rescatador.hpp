@@ -79,6 +79,20 @@ public:
     this->memoria = vector<vector<int>>(128, vector<int>(128, 0));
     this->hayPlan = false;
     this->plan = {};
+    for (int j = 0; j < 3; j++) {
+      for (int i = 0; i < this->mapaResultado.size(); i++) {
+        this->mapaResultado[j][i] = 'P';
+      }
+      for (int i = 0; i < this->mapaResultado.size(); i++) {
+        this->mapaResultado[i][j] = 'P';
+      }
+      for (int i = 0; i < this->mapaResultado.size(); i++) {
+        this->mapaResultado[i][this->mapaResultado.size() - 1 - j] = 'P';
+      }
+      for (int i = 0; i < this->mapaResultado.size(); i++) {
+        this->mapaResultado[this->mapaResultado.size() - 1 - j][i] = 'P';
+      }
+    }
   }
   ComportamientoRescatador(std::vector<std::vector<unsigned char>> mapaR,
                            std::vector<std::vector<unsigned char>> mapaC)

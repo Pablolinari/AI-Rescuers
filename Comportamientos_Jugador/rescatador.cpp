@@ -165,7 +165,7 @@ Action ComportamientoRescatador::think(Sensores sensores) {
     // accion = ComportamientoRescatadorNivel_3 (sensores);
     break;
   case 4:
-     accion = ComportamientoRescatadorNivel_4 (sensores);
+    accion = ComportamientoRescatadorNivel_4(sensores);
     break;
   }
 
@@ -1005,8 +1005,8 @@ ComportamientoRescatador::ComportamientoRescatadorNivel_2(Sensores sensores) {
 /////////////////////////////////////////////////////////////////////////
 
 bool CasillaAccesibleR4(const EstadoR &st,
-                       const vector<vector<unsigned char>> &terreno,
-                       const vector<vector<unsigned char>> &altura) {
+                        const vector<vector<unsigned char>> &terreno,
+                        const vector<vector<unsigned char>> &altura) {
   EstadoR next = NextCasillaR(st);
   bool check1 = false, check2 = false;
   check1 = terreno[next.f][next.c] != 'P' and terreno[next.f][next.c] != 'M' &&
@@ -1018,8 +1018,8 @@ bool CasillaAccesibleR4(const EstadoR &st,
 }
 
 bool CasillaAccesibleRunR4(const EstadoR &st,
-                          const vector<vector<unsigned char>> &terreno,
-                          const vector<vector<unsigned char>> &altura) {
+                           const vector<vector<unsigned char>> &terreno,
+                           const vector<vector<unsigned char>> &altura) {
 
   EstadoR intermedio = NextCasillaR(st);
   EstadoR final = NextCasillaR(intermedio);
@@ -1035,8 +1035,8 @@ bool CasillaAccesibleRunR4(const EstadoR &st,
   return check1 and check2;
 }
 EstadoR applyR4(Action accion, const EstadoR &st,
-               const vector<vector<unsigned char>> &terreno,
-               const vector<vector<unsigned char>> &altura) {
+                const vector<vector<unsigned char>> &terreno,
+                const vector<vector<unsigned char>> &altura) {
   EstadoR next = st;
   EstadoR intermedio;
   switch (accion) {
@@ -1060,7 +1060,6 @@ EstadoR applyR4(Action accion, const EstadoR &st,
   }
   return next;
 }
-
 
 int CalcularCosteR4(Action accion, const EstadoR &actual,
                     const EstadoR &destino,
@@ -1165,7 +1164,7 @@ vector<Action> ComportamientoRescatador::AestrellaR4(
     actual.estado.zapatillas = true;
   }
   if (actual.estado.f == final.f && actual.estado.c == final.c) {
-		cout  <<"sale"<<endl;
+    cout << "sale" << endl;
     return actual.secuencia;
   }
   frontier.push(actual);
@@ -1173,7 +1172,6 @@ vector<Action> ComportamientoRescatador::AestrellaR4(
     // Extraemos el nodo con menor coste
     actual = frontier.top();
     frontier.pop();
-		cout <<actual.secuencia.size()<<endl;
     // Si llegamos al estado final, devolvemos la secuencia de acciones
     if (actual.estado.f == final.f && actual.estado.c == final.c) {
       return actual.secuencia;
@@ -1213,8 +1211,10 @@ ComportamientoRescatador::ComportamientoRescatadorNivel_4(Sensores sensores) {
       sensores.posC == sensores.destinoC) {
     if (sensores.gravedad) {
       accion = CALL_ON;
+      sensores.venpaca = true;
+    } else {
+      accion = IDLE;
     }
-    accion = IDLE;
   } else {
     if (!hayPlan) {
       EstadoR inicio, fin;
@@ -1227,9 +1227,8 @@ ComportamientoRescatador::ComportamientoRescatadorNivel_4(Sensores sensores) {
       inicio.zapatillas = zapatillas;
       fin.f = sensores.destinoF;
       fin.c = sensores.destinoC;
-      plan =AestrellaR4(inicio, fin, mapaResultado, mapaCotas);
+      plan = AestrellaR4(inicio, fin, mapaResultado, mapaCotas);
       VisualizaPlan(inicio, plan);
-			cout << plan.size()<<endl;
       hayPlan = plan.size() != 0;
     }
     if (hayPlan and plan.size() > 0) {

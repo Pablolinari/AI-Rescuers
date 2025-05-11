@@ -12,7 +12,7 @@ struct EstadoA {
   int c;
   int brujula;
   bool zapatillas;
-	  bool operator<(const EstadoA &st) const {
+  bool operator<(const EstadoA &st) const {
     if (f < st.f)
       return true;
     else if (f == st.f && c < st.c)
@@ -25,33 +25,33 @@ struct EstadoA {
     else
       return false;
   }
-  bool operator==(const EstadoA&st) const {
+  bool operator==(const EstadoA &st) const {
     return f == st.f && c == st.c && brujula == st.brujula &&
            zapatillas == st.zapatillas;
   }
-	EstadoA& operator=(const EstadoA&st){
-		if(this!=&st){
-			c=st.c;
-			f=st.f;
-			zapatillas=st.zapatillas;
-			brujula=st.brujula;
-		}
-		return *this;
-	}
+  EstadoA &operator=(const EstadoA &st) {
+    if (this != &st) {
+      c = st.c;
+      f = st.f;
+      zapatillas = st.zapatillas;
+      brujula = st.brujula;
+    }
+    return *this;
+  }
 };
 struct NodoA {
   EstadoA estado;
   vector<Action> secuencia;
-	int coste ;
+  int coste;
   bool operator==(const NodoA &nodo) const { return estado == nodo.estado; }
-	NodoA& operator=(const NodoA&nodo){
-		if(this!=&nodo){
-			estado =nodo.estado;
-			secuencia=nodo.secuencia;
-			coste=nodo.coste;
-		}
-		return *this;
-	}
+  NodoA &operator=(const NodoA &nodo) {
+    if (this != &nodo) {
+      estado = nodo.estado;
+      secuencia = nodo.secuencia;
+      coste = nodo.coste;
+    }
+    return *this;
+  }
 };
 
 class ComportamientoAuxiliar : public Comportamiento {
@@ -62,26 +62,38 @@ public:
     this->giroizq = 0;
     this->zapatillas = false;
     this->last_action = IDLE;
-		this->camino_opcional=0;
-		this->extrawalk=false;
-		this->extraturni=false;
-		this->extraturnd=false;
+    this->camino_opcional = 0;
+    this->extrawalk = false;
+    this->extraturni = false;
+    this->extraturnd = false;
     this->memoria = vector<vector<int>>(128, vector<int>(128, 0));
-		this->plan={};   // Inicializar Variables de Estado Niveles 2,3
-		this->hayPlan=false;
+    this->plan = {}; 
+    this->hayPlan = false;
+    for (int j = 0; j < 3; j++) {
+      for (int i = 0; i < this->mapaResultado.size(); i++) {
+        this->mapaResultado[j][i] = 'P';
+      }
+      for (int i = 0; i < this->mapaResultado.size(); i++) {
+        this->mapaResultado[i][j] = 'P';
+      }
+      for (int i = 0; i < this->mapaResultado.size(); i++) {
+        this->mapaResultado[i][this->mapaResultado.size() - 1 - j] = 'P';
+      }
+      for (int i = 0; i < this->mapaResultado.size(); i++) {
+        this->mapaResultado[this->mapaResultado.size() - 1 - j][i] = 'P';
+      }
+    }
   }
   ComportamientoAuxiliar(std::vector<std::vector<unsigned char>> mapaR,
                          std::vector<std::vector<unsigned char>> mapaC)
       : Comportamiento(mapaR, mapaC) {
- 
-		this->hayPlan=false;
-		this->zapatillas=false;
-		this->plan={};   // Inicializar Variables de Estado Niveles 2,3
+
+    this->hayPlan = false;
+    this->zapatillas = false;
+    this->plan = {}; // Inicializar Variables de Estado Niveles 2,3
   }
   ComportamientoAuxiliar(const ComportamientoAuxiliar &comport)
-      : Comportamiento(comport) {
-
-	}
+      : Comportamiento(comport) {}
   ~ComportamientoAuxiliar() {}
 
   Action think(Sensores sensores);
@@ -93,17 +105,21 @@ public:
   Action ComportamientoAuxiliarNivel_2(Sensores sensores);
   Action ComportamientoAuxiliarNivel_3(Sensores sensores);
   Action ComportamientoAuxiliarNivel_4(Sensores sensores);
-	int Calculalado(int posc,int brujula);
+  int Calculalado(int posc, int brujula);
   int MenosPisadaA(Sensores sensores);
   int MenosPisadaA1(Sensores sensores);
   int SectorInteresanteA(int posf, int posc);
   int CasillainteresanteA(Sensores sensores);
   int CasillainteresanteA1(Sensores sensores);
-	void VisualizaPlan(const EstadoA &st,const vector<Action>&plan);
-	void PintaPlan(const vector<Action>&plan , bool zap);
-	vector<Action> AestrellaA(const EstadoA & inicio,const EstadoA& final,const vector<vector<unsigned char>>&terreno,const vector<vector<unsigned char>>&altura);
+  void VisualizaPlan(const EstadoA &st, const vector<Action> &plan);
+  void PintaPlan(const vector<Action> &plan, bool zap);
+  vector<Action> AestrellaA(const EstadoA &inicio, const EstadoA &final,
+                            const vector<vector<unsigned char>> &terreno,
+                            const vector<vector<unsigned char>> &altura);
 
-	vector<Action> AestrellaA4(const EstadoA & inicio,const EstadoA& final,const vector<vector<unsigned char>>&terreno,const vector<vector<unsigned char>>&altura);
+  vector<Action> AestrellaA4(const EstadoA &inicio, const EstadoA &final,
+                             const vector<vector<unsigned char>> &terreno,
+                             const vector<vector<unsigned char>> &altura);
 
 private:
   // Definir Variables de Estado
@@ -114,10 +130,10 @@ private:
   std::vector<std::vector<int>> memoria;
   vector<Action> plan;
   bool hayPlan;
-	bool extrawalk;
-	bool extraturni;
-	bool extraturnd;
-	int camino_opcional;
+  bool extrawalk;
+  bool extraturni;
+  bool extraturnd;
+  int camino_opcional;
 };
 
 #endif
