@@ -13,6 +13,14 @@
 #include <system_error>
 #include <utility>
 #include <vector>
+#include <random>
+double get_random_0_1R() {
+  static std::mt19937 gen(42); 
+  static std::uniform_real_distribution<double> dis(
+      0.0, 1.0); 
+
+  return dis(gen); 
+}
 // usado para generar nodos en dijkstra
 const vector<Action> genera_acciones = {WALK, RUN, TURN_L, TURN_SR};
 // para calcular la vision dependiendo de la posicion
@@ -579,7 +587,7 @@ ComportamientoRescatador::ComportamientoRescatadorNivel_1(Sensores sensores) {
       break;
 
     case 0:
-      action = TURN_SR;
+			action=TURN_SR;
       break;
     }
 
@@ -875,13 +883,10 @@ vector<Action> ComportamientoRescatador::DijkstraRescatador(
     }
   };
 
-  // Cola de prioridad para explorar los nodos
   priority_queue<NodoR, vector<NodoR>, ComparadorCoste> frontier;
 
-  // Mapa para registrar el menor coste encontrado para cada estado
   map<EstadoR, int> mejor_coste;
 
-  // Nodo inicial
   NodoR actual;
   actual.estado = inicio;
   actual.coste = 0;
@@ -892,30 +897,24 @@ vector<Action> ComportamientoRescatador::DijkstraRescatador(
   frontier.push(actual);
 
   while (!frontier.empty()) {
-    // Extraemos el nodo con menor coste
     actual = frontier.top();
     frontier.pop();
 
-    // Si llegamos al estado final, devolvemos la secuencia de acciones
     if (actual.estado.f == final.f && actual.estado.c == final.c) {
       return actual.secuencia;
     }
 
-    // Si estamos en una casilla con zapatillas, actualizamos el estado
 
-    // Generamos los nodos hijos para cada acción posible
     for (const auto &accion : genera_acciones) {
       NodoR hijo = actual;
       hijo.estado = applyR(accion, actual.estado, terreno, altura);
       if (terreno[hijo.estado.f][hijo.estado.c] == 'D') {
         hijo.estado.zapatillas = true;
       }
-      // Calculamos el coste de la acción
       int coste_accion =
           CalcularCoste(accion, actual.estado, hijo.estado, terreno, altura);
       hijo.coste = actual.coste + coste_accion;
 
-      // Si encontramos un camino más barato al estado hijo, lo procesamos
       auto it = mejor_coste.find(hijo.estado);
       if (it == mejor_coste.end() || it->second > hijo.coste) {
         mejor_coste[hijo.estado] = hijo.coste;
@@ -925,7 +924,6 @@ vector<Action> ComportamientoRescatador::DijkstraRescatador(
     }
   }
 
-  // Si no se encuentra solución, devolvemos una lista vacía
   return {};
 }
 
@@ -1147,10 +1145,8 @@ vector<Action> ComportamientoRescatador::AestrellaR4(
   priority_queue<NodoR, std::vector<NodoR>, ComparadorCoste> frontier(
       (ComparadorCoste(final)));
 
-  // Mapa para registrar el menor coste encontrado para cada estado
   map<EstadoR, int> mejor_coste;
 
-  // Nodo inicial
   NodoR actual;
   actual.estado = inicio;
   actual.coste = 0;
@@ -1166,15 +1162,12 @@ vector<Action> ComportamientoRescatador::AestrellaR4(
   }
   frontier.push(actual);
   while (!frontier.empty()) {
-    // Extraemos el nodo con menor coste
     actual = frontier.top();
     frontier.pop();
-    // Si llegamos al estado final, devolvemos la secuencia de acciones
     if (actual.estado.f == final.f && actual.estado.c == final.c) {
       return actual.secuencia;
     }
 
-    // Generamos los nodos hijos para cada acción posible
     for (const auto &accion : genera_acciones) {
       NodoR hijo = actual;
       hijo.estado = applyR4(accion, actual.estado, terreno, altura, agentes);
@@ -1186,7 +1179,6 @@ vector<Action> ComportamientoRescatador::AestrellaR4(
           CalcularCosteR4(accion, actual.estado, hijo.estado, terreno, altura);
       hijo.coste = actual.coste + coste_accion;
 
-      // Si encontramos un camino más barato al estado hijo
 
       auto it = mejor_coste.find(hijo.estado);
       if (it == mejor_coste.end() || it->second > hijo.coste) {
@@ -1260,22 +1252,22 @@ Action
 ComportamientoRescatador::ComportamientoRescatadorNivel_4(Sensores sensores) {
   SituarSensorEnMapaR4(mapaResultado, mapaCotas, mapaEntidades, sensores);
   Action accion = IDLE;
-	if(sensores.superficie[0]=='X' && sensores.energia<2000){
-		return IDLE;
-	}
-  
+  if (sensores.superficie[0] == 'X' && sensores.energia < 2000) {
+    return IDLE;
+  }
+
   if (sensores.posF == sensores.destinoF &&
       sensores.posC == sensores.destinoC) {
-		if(extraturnd){
-			return IDLE;
-		}
+    if (extraturnd) {
+      return IDLE;
+    }
     if (sensores.gravedad) {
       accion = CALL_ON;
       sensores.venpaca = true;
       extraturnd = true;
     }
   } else {
-		extraturnd=false;
+    extraturnd = false;
     if (!hayPlan) {
       EstadoR inicio, fin;
       inicio.f = sensores.posF;

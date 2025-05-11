@@ -12,12 +12,10 @@
 #include <set>
 #include <vector>
 double get_random_0_1() {
-  // Establecer una semilla fija (por ejemplo, 42)
-  static std::mt19937 gen(42); // Mersenne Twister con semilla fija
-  static std::uniform_real_distribution<double> dis(
-      0.0, 1.0); // Distribución uniforme en [0, 1)
+  static std::mt19937 gen(42);
+  static std::uniform_real_distribution<double> dis(0.0, 1.0);
 
-  return dis(gen); // Generar número aleatorio
+  return dis(gen);
 }
 const vector<Action> genera_acciones = {WALK, TURN_SR};
 const vector<vector<pair<int, int>>> posiciones_vision = {
@@ -837,10 +835,8 @@ vector<Action> ComportamientoAuxiliar::AestrellaA(
   priority_queue<NodoA, std::vector<NodoA>, ComparadorCoste> frontier(
       (ComparadorCoste(final)));
 
-  // Mapa para registrar el menor coste encontrado para cada estado
   map<EstadoA, int> mejor_coste;
 
-  // Nodo inicial
   NodoA actual;
   actual.estado = inicio;
   actual.coste = 0;
@@ -855,11 +851,9 @@ vector<Action> ComportamientoAuxiliar::AestrellaA(
   }
   frontier.push(actual);
   while (!frontier.empty()) {
-    // Extraemos el nodo con menor coste
     actual = frontier.top();
     frontier.pop();
 
-    // Si llegamos al estado final, devolvemos la secuencia de acciones
     if (actual.estado.f == final.f && actual.estado.c == final.c) {
       return actual.secuencia;
     }
@@ -871,18 +865,10 @@ vector<Action> ComportamientoAuxiliar::AestrellaA(
       if (terreno[hijo.estado.f][hijo.estado.c] == 'D') {
         hijo.estado.zapatillas = true;
       }
-      /*
-if (hijo.estado == actual.estado) {
-continue;
-}
-*/
-      // Calculamos el coste de la acción
 
       int coste_accion =
           CalcularCosteA(accion, actual.estado, hijo.estado, terreno, altura);
       hijo.coste = actual.coste + coste_accion;
-
-      // Si encontramos un camino más barato al estado hijo, lo procesamos
 
       auto it = mejor_coste.find(hijo.estado);
       if (it == mejor_coste.end() || it->second > hijo.coste) {
@@ -1029,10 +1015,8 @@ vector<Action> ComportamientoAuxiliar::AestrellaA4(
   priority_queue<NodoA, std::vector<NodoA>, ComparadorCoste> frontier(
       (ComparadorCoste(final)));
 
-  // Mapa para registrar el menor coste encontrado para cada estado
   map<EstadoA, int> mejor_coste;
 
-  // Nodo inicial
   NodoA actual;
   actual.estado = inicio;
   actual.coste = 0;
@@ -1047,29 +1031,23 @@ vector<Action> ComportamientoAuxiliar::AestrellaA4(
   }
   frontier.push(actual);
   while (!frontier.empty()) {
-    // Extraemos el nodo con menor coste
     actual = frontier.top();
     frontier.pop();
 
-    // Si llegamos al estado final, devolvemos la secuencia de acciones
     if (actual.estado.f == final.f && actual.estado.c == final.c) {
       return actual.secuencia;
     }
 
-    // Generamos los nodos hijos para cada acción posible
     for (const auto &accion : genera_acciones) {
       NodoA hijo = actual;
       hijo.estado = applyA4(accion, actual.estado, terreno, altura);
       if (terreno[hijo.estado.f][hijo.estado.c] == 'D') {
         hijo.estado.zapatillas = true;
       }
-      // Calculamos el coste de la acción
 
       int coste_accion =
           CalcularCosteA4(accion, actual.estado, hijo.estado, terreno, altura);
       hijo.coste = actual.coste + coste_accion;
-
-      // Si encontramos un camino más barato al estado hijo
 
       auto it = mejor_coste.find(hijo.estado);
       if (it == mejor_coste.end() || it->second > hijo.coste) {
