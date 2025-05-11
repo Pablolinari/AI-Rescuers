@@ -77,6 +77,8 @@ public:
     this->extraturni = false;
     this->extrawalk = false;
     this->memoria = vector<vector<int>>(128, vector<int>(128, 0));
+    this->hayPlan = false;
+    this->plan = {};
   }
   ComportamientoRescatador(std::vector<std::vector<unsigned char>> mapaR,
                            std::vector<std::vector<unsigned char>> mapaC)

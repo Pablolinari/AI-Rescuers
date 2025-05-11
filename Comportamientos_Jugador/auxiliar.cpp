@@ -167,10 +167,10 @@ Action ComportamientoAuxiliar::think(Sensores sensores) {
     accion = ComportamientoAuxiliarNivel_2(sensores);
     break;
   case 3:
-    accion = ComportamientoAuxiliarNivel_3(sensores);
+    //accion = ComportamientoAuxiliarNivel_3(sensores);
     break;
   case 4:
-    // accion = ComportamientoAuxiliarNivel_4 (sensores);
+    accion = ComportamientoAuxiliarNivel_4 (sensores);
     break;
   }
 
@@ -919,7 +919,6 @@ ComportamientoAuxiliar::ComportamientoAuxiliarNivel_3(Sensores sensores) {
     hayPlan = plan.size() != 0;
   }
   if (hayPlan and plan.size() > 0) {
-    cout << boolalpha << this->zapatillas << "tiene zapas " << endl;
     accion = plan.front();
     plan.erase(plan.begin());
   }
@@ -1026,18 +1025,13 @@ vector<Action> ComportamientoAuxiliar::AestrellaA4(
       if (terreno[hijo.estado.f][hijo.estado.c] == 'D') {
         hijo.estado.zapatillas = true;
       }
-      /*
-if (hijo.estado == actual.estado) {
-continue;
-}
-*/
       // Calculamos el coste de la acción
 
       int coste_accion =
           CalcularCosteA4(accion, actual.estado, hijo.estado, terreno, altura);
       hijo.coste = actual.coste + coste_accion;
 
-      // Si encontramos un camino más barato al estado hijo, lo procesamos
+      // Si encontramos un camino más barato al estado hijo
 
       auto it = mejor_coste.find(hijo.estado);
       if (it == mejor_coste.end() || it->second > hijo.coste) {
@@ -1050,8 +1044,58 @@ continue;
 
   return {};
 }
-
+int LlegaAlRescate(Sensores sensores) {
+  int posf, posc;
+  int orientacion = -1;
+  for (int rumbo = 0; rumbo <= 7; rumbo++)
+    for (int i = 0; i < 15; i++) {
+      posf = sensores.posF + posiciones_vision[rumbo][i].first;
+      posc = sensores.posC + posiciones_vision[rumbo][i].second;
+      if (posf == sensores.destinoF && posc == sensores.destinoC) {
+        orientacion = rumbo;
+      }
+    }
+  return orientacion;
+}
 Action
 ComportamientoAuxiliar::ComportamientoAuxiliarNivel_4(Sensores sensores) {
-  return IDLE;
+  Action accion = IDLE;
+  if (sensores.destinoC != -1 && sensores.destinoF != -1) {
+    if (!hayPlan) {
+      // Invocar al método de búsqueda
+      EstadoA inicio, fin;
+      inicio.f = sensores.posF;
+      inicio.c = sensores.posC;
+      inicio.brujula = sensores.rumbo;
+      if (mapaResultado[inicio.f][inicio.c] == 'D') {
+        zapatillas = true;
+      }
+      inicio.zapatillas = this->zapatillas;
+      fin.f = sensores.destinoF;
+      fin.c = sensores.destinoC;
+      plan = AestrellaA(inicio, fin, mapaResultado, mapaCotas);
+      VisualizaPlan(inicio, plan);
+      hayPlan = plan.size() != 0;
+    }
+    if (hayPlan and plan.size() > 0) {
+      int orientacionrescate = LlegaAlRescate(sensores);
+      if (orientacionrescate == -1) {
+        accion = plan.front();
+        plan.erase(plan.begin());
+      } else {
+        if (orientacionrescate == sensores.rumbo) {
+          accion = IDLE;
+        } else {
+          accion = TURN_SR;
+        }
+      }
+    } else if (plan.size() == 0 || sensores.choque) {
+      hayPlan = false;
+      if (sensores.superficie[0] == 'D')
+        zapatillas = true;
+
+      accion = IDLE;
+    }
+  }
+  return accion;
 }

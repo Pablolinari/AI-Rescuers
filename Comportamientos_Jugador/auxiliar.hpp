@@ -67,6 +67,8 @@ public:
 		this->extraturni=false;
 		this->extraturnd=false;
     this->memoria = vector<vector<int>>(128, vector<int>(128, 0));
+		this->plan={};   // Inicializar Variables de Estado Niveles 2,3
+		this->hayPlan=false;
   }
   ComportamientoAuxiliar(std::vector<std::vector<unsigned char>> mapaR,
                          std::vector<std::vector<unsigned char>> mapaC)
