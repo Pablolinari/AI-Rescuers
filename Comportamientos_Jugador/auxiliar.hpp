@@ -67,7 +67,7 @@ public:
     this->extraturni = false;
     this->extraturnd = false;
     this->memoria = vector<vector<int>>(128, vector<int>(128, 0));
-    this->plan = {}; 
+    this->plan = {};
     this->hayPlan = false;
     for (int j = 0; j < 3; j++) {
       for (int i = 0; i < this->mapaResultado.size(); i++) {
@@ -102,6 +102,8 @@ public:
 
   Action ComportamientoAuxiliarNivel_0(Sensores sensores);
   Action ComportamientoAuxiliarNivel_1(Sensores sensores);
+
+  Action ComportamientoAuxiliarNivel_1mod4(Sensores sensores);
   Action ComportamientoAuxiliarNivel_2(Sensores sensores);
   Action ComportamientoAuxiliarNivel_3(Sensores sensores);
   Action ComportamientoAuxiliarNivel_4(Sensores sensores);

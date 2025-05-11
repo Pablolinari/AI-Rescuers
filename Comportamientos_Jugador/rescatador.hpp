@@ -113,6 +113,7 @@ public:
   Action ComportamientoRescatadorNivel_2(Sensores sensores);
   Action ComportamientoRescatadorNivel_3(Sensores sensores);
   Action ComportamientoRescatadorNivel_4(Sensores sensores);
+  Action ComportamientoRescatadorNivel_1mod4(Sensores sensores);
   int MenosPisadaR(Sensores sensores);
   int MenosPisadaR1(Sensores sensores);
   int SectorInteresanteR(int posf, int posc);
@@ -121,12 +122,14 @@ public:
   void VisualizaPlan(const EstadoR &st, const vector<Action> &plan);
   void PintaPlan(const vector<Action> &plan, bool zap);
   vector<Action>
-  DijkstraRescatadornew(const EstadoR &inicio, const EstadoR &final,
-                        const vector<vector<unsigned char>> &terreno,
-                        const vector<vector<unsigned char>> &altura);
+  DijkstraRescatador(const EstadoR &inicio, const EstadoR &final,
+                     const vector<vector<unsigned char>> &terreno,
+                     const vector<vector<unsigned char>> &altura);
   vector<Action> AestrellaR4(const EstadoR &inicio, const EstadoR &final,
                              const vector<vector<unsigned char>> &terreno,
-                             const vector<vector<unsigned char>> &altura);
+                             const vector<vector<unsigned char>> &altura,
+                             const vector<vector<unsigned char>> &agentes);
+  void ResetEntidades();
 
 private:
   // Variables de Estado

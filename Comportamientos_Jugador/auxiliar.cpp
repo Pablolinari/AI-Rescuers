@@ -164,10 +164,10 @@ Action ComportamientoAuxiliar::think(Sensores sensores) {
     accion = ComportamientoAuxiliarNivel_1(sensores);
     break;
   case 2:
-    accion = ComportamientoAuxiliarNivel_2(sensores);
+    // accion = ComportamientoAuxiliarNivel_2(sensores);
     break;
   case 3:
-    // accion = ComportamientoAuxiliarNivel_3(sensores);
+    accion = ComportamientoAuxiliarNivel_3(sensores);
     break;
   case 4:
     accion = ComportamientoAuxiliarNivel_4(sensores);
@@ -261,7 +261,6 @@ int ComportamientoAuxiliar::MenosPisadaA(Sensores sensores) {
       }
     }
   }
-  cout << pos << endl;
   return pos;
 }
 
@@ -494,7 +493,6 @@ int ComportamientoAuxiliar::MenosPisadaA1(Sensores sensores) {
       }
     }
   }
-  cout << pos << endl;
   return pos;
 }
 
@@ -610,7 +608,6 @@ ComportamientoAuxiliar::ComportamientoAuxiliarNivel_1(Sensores sensores) {
       action = TURN_SR;
       break;
     }
-    // if (pos != 0)
     memoria[sensores.posF][sensores.posC]++;
   }
 
@@ -941,10 +938,18 @@ bool CasillaAccesibleA4(const EstadoA &st,
 
   check2 = abs(altura[next.f][next.c] - altura[st.f][st.c]) <= 1;
   check3 = check1 && terreno[next.f][next.c] != 'B';
-  if (st.zapatillas) {
-    return (check1 and check2);
+  if (terreno[next.f][next.c] != '?') {
+    if (st.zapatillas) {
+      return (check1 && check2);
+    } else {
+      return (check3 && check2);
+    }
   } else {
-    return (check3 and check2);
+    if (st.zapatillas) {
+      return (check1);
+    } else {
+      return (check3);
+    }
   }
 }
 EstadoA applyA4(Action accion, const EstadoA &st,
@@ -1077,26 +1082,73 @@ vector<Action> ComportamientoAuxiliar::AestrellaA4(
 
   return {};
 }
-int LlegaAlRescate(Sensores sensores) {
-  int posf, posc;
-  int orientacion = -1;
-  for (int rumbo = 0; rumbo <= 7; rumbo++)
-    for (int i = 0; i < 15; i++) {
-      posf = sensores.posF + posiciones_vision[rumbo][i].first;
-      posc = sensores.posC + posiciones_vision[rumbo][i].second;
-      if (posf == sensores.destinoF && posc == sensores.destinoC) {
-        orientacion = rumbo;
-      }
+
+bool Valida4(int dif, char c, bool zap) {
+  bool check1 = false, check2 = false, check3 = false;
+  check1 = c != 'P' and c != 'M';
+  check2 = abs(dif) <= 1;
+  check3 = c != 'B' && check1;
+  if (zap) {
+    return check1 && check2;
+  } else {
+    return check3 && check2;
+  }
+}
+Action
+ComportamientoAuxiliar::ComportamientoAuxiliarNivel_1mod4(Sensores sensores) {
+  Action action;
+  SituarSensorEnMapaA(mapaResultado, mapaCotas, sensores);
+
+  if (sensores.superficie[0] == 'D')
+    zapatillas = true;
+
+  if (giroizq != 0) {
+    action = TURN_SR;
+    giroizq--;
+  } else {
+    int pos = 0;
+    if (Valida4(sensores.cota[0] - sensores.cota[2], sensores.superficie[2],
+                zapatillas) &&
+        sensores.agentes[2] == '_') {
+      pos = 2;
+    } else if (Valida4(sensores.cota[0] - sensores.cota[1],
+                       sensores.superficie[1], zapatillas) &&
+               sensores.agentes[1] == '_') {
+      pos = 1;
+    } else if (Valida4(sensores.cota[0] - sensores.cota[1],
+                       sensores.superficie[1], zapatillas) &&
+               sensores.agentes[3] == '_') {
+      pos = 3;
     }
-  return orientacion;
+
+    switch (pos) {
+    case 2:
+      action = WALK;
+      break;
+    case 1:
+      giroizq = 6;
+      action = TURN_SR;
+      break;
+    case 3:
+      action = TURN_SR;
+    case 0:
+      action = TURN_SR;
+      break;
+    }
+  }
+  return action;
 }
 Action
 ComportamientoAuxiliar::ComportamientoAuxiliarNivel_4(Sensores sensores) {
   Action accion = IDLE;
 
   SituarSensorEnMapaA(mapaResultado, mapaCotas, sensores);
+  if (sensores.superficie[0] == 'X' && sensores.energia < 2000) {
+    return IDLE;
+  }
   if (sensores.venpaca) {
     if (!hayPlan) {
+      SituarSensorEnMapaA(mapaResultado, mapaCotas, sensores);
       // Invocar al método de búsqueda
       EstadoA inicio, fin;
       inicio.f = sensores.posF;
@@ -1110,34 +1162,22 @@ ComportamientoAuxiliar::ComportamientoAuxiliarNivel_4(Sensores sensores) {
       fin.c = sensores.destinoC;
       plan = AestrellaA4(inicio, fin, mapaResultado, mapaCotas);
       VisualizaPlan(inicio, plan);
-      hayPlan = plan.size() != 0;
+      hayPlan = true;
     }
     if (hayPlan and plan.size() > 0) {
-      int orientacionrescate = LlegaAlRescate(sensores);
-      if (orientacionrescate == -1) {
-        accion = plan.front();
-        if (accion == WALK) {
-          if (ViablePorAlturaA(sensores.cota[0] - sensores.cota[2]))
-            plan.erase(plan.begin());
-          else {
-            accion = TURN_SR;
-            hayPlan = false;
-          }
-        }
-        plan.erase(plan.begin());
-      } else {
-        if (orientacionrescate == sensores.rumbo) {
-          accion = IDLE;
-        } else {
-          accion = TURN_SR;
-        }
+      accion = plan.front();
+      if (accion == WALK &&
+          !ViablePorAlturaA(sensores.cota[0] - sensores.cota[2])) {
+        accion = ComportamientoAuxiliarNivel_1(sensores);
+        hayPlan = false;
       }
-    } else if (plan.size() == 0 || sensores.choque) {
+      plan.erase(plan.begin());
+    }
+    if (plan.size() == 0 || sensores.choque) {
       hayPlan = false;
       if (sensores.superficie[0] == 'D')
         zapatillas = true;
-
-      accion = IDLE;
+      accion = ComportamientoAuxiliarNivel_1mod4(sensores);
     }
   }
   return accion;
