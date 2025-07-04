@@ -1,5 +1,33 @@
 # Práctica 2 de *Inteligencia Artificial*, curso 2024/2025
+Artificial Intelligence Course - First Project Description
 
+This project is the first project of the Artificial Intelligence course. It consists of a game where a main rescuer and an auxiliary rescuer are involved, and they must achieve different objectives depending on the level they are on.
+
+There are two types of agents , main and auxiliary and various types of cells, such as bush, water, paths, roads, shoes, safety, and forest. Each cell type influences the actions that agents can perform. Additionally, agents have different capabilities; for example, the main agent can run, and the auxiliary agent can move through bushes if it is wearing shoes.
+
+Each cell is assigned a height. If the height difference between cells exceeds what an agent can handle, the agent will either bump into the cell or fall and die, depending on the situation.
+
+
+
+
+
+Level 0: Both agents are reactive agents. They must navigate the given maps and reach their respective checkpoints before their energy is depleted or time runs out.The agents don't know the map.
+
+
+
+Level 1: Both agents are reactive and must explore the entire map, but they can only move through designated paths and roads.The agents don't know the map.
+
+
+
+Level 2: The main agent must use the Dijkstra algorithm to find the most efficient path to reach the goal cell.The agents know the map.
+
+
+
+Level 3: The auxiliary agent must use the A* algorithm to find the most efficient path to reach the goal cell.The agents  know the map.
+
+
+
+Level 4: Both agents use reactive and deliberative behaviors. The main agent must reach the cell where the accident is located. If the problem is severe, the main agent must call the auxiliary agent and wait for them to arrive. The goal of this level is to earn as many points as possible. Points are awarded when a rescue is completed. Once a rescue is completed, the agents can move on to another rescue. The main agent can decide whether or not to call the auxiliary agent. The simulation ends when the agents' battery reaches zero or the simulation time expires. The agents don't know the map.
 ## Prerrequisitos
 
 ### Crear una cuenta en [GitHub](https://github.com/). 
